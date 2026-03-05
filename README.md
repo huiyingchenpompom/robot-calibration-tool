@@ -45,7 +45,11 @@ git pull
 npm install
 npm install node-addon-api node-api-headers
 
-# 2. 编译相机插件（Windows GBK 系统已通过 /utf-8 标志修复 C4819/C2001 错误）
+# 2. 编译相机插件
+#    前提：node.exe 同目录下必须存在 node.lib
+#    官方 Node.js 安装程序会自动放置该文件。若缺失，运行以下命令查看版本：
+#      node -p "process.versions.node"
+#    然后从 https://nodejs.org/dist/v{version}/node.lib 下载并放到 node.exe 所在目录
 npm run build:camera
 
 # 3. 编译前端

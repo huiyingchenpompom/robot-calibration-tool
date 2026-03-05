@@ -109,6 +109,43 @@ if(WIN32)
     # /utf-8: 告知 MSVC 源文件和执行字符集均为 UTF-8，解决中文字符在 GBK 代码页下
     # 导致的 C4819 警告和 C2001 "常量中有换行符" 编译错误
     target_compile_options(camera_addon PRIVATE /utf-8)
+
+    # 链接 node.lib，提供 napi_* 导出符号。
+    # node.lib 与 node.exe 位于同一目录（Node.js 官方安装目录）。
+    # 如果 node.lib 不存在，说明 Node.js 未安装完整开发文件，
+    # 可从 https://nodejs.org/dist/v{version}/node.lib 下载并放置到 node.exe 同目录。
+    execute_process(
+        COMMAND node -p "process.execPath"
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..
+        OUTPUT_VARIABLE NODE_EXECUTABLE
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        RESULT_VARIABLE NODE_EXECPATH_RESULT
+    )
+    if(NOT NODE_EXECPATH_RESULT EQUAL 0 OR NOT NODE_EXECUTABLE)
+        message(FATAL_ERROR "无法执行 node 获取 process.execPath，请确认 Node.js 已安装并在 PATH 中。")
+    endif()
+    execute_process(
+        COMMAND node -p "process.versions.node"
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..
+        OUTPUT_VARIABLE NODE_VERSION
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        RESULT_VARIABLE NODE_VERSION_RESULT
+    )
+    if(NOT NODE_VERSION_RESULT EQUAL 0 OR NOT NODE_VERSION)
+        set(NODE_VERSION "unknown")
+    endif()
+    get_filename_component(NODE_ROOT_DIR "${NODE_EXECUTABLE}" DIRECTORY)
+    set(NODE_LIB_PATH "${NODE_ROOT_DIR}/node.lib")
+    if(EXISTS "${NODE_LIB_PATH}")
+        message(STATUS "node.lib 已找到: ${NODE_LIB_PATH}")
+        target_link_libraries(camera_addon PRIVATE "${NODE_LIB_PATH}")
+    else()
+        message(FATAL_ERROR
+            "未找到 node.lib (查找路径: ${NODE_LIB_PATH})\n"
+            "请从 https://nodejs.org/dist/v${NODE_VERSION}/node.lib 下载，\n"
+            "并将 node.lib 放置到 node.exe 同目录: ${NODE_ROOT_DIR}")
+    endif()
+
     set_target_properties(camera_addon PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/Release
         LIBRARY_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/Release
