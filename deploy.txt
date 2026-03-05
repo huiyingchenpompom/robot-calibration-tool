@@ -1,21 +1,81 @@
-0. 克隆仓库（注意：协议头必须是 https:// 而不是 .https://，多一个点会导致 "protocol '.https' is not supported" 错误）
-git clone https://github.com/huiyingchenpompom/robot-calibration-tool.git
-cd robot-calibration-tool
+========================================================
+  Robot Calibration Tool — 命令行编译快速参考
+  完整说明请见 README.md
+========================================================
 
-1.
-set ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/
-set ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-builder-binaries/
+【前置条件】
+  - Node.js 18 LTS（官方安装包，自带 node.lib）
+  - CMake 3.15+（已加入 PATH）
+  - Visual Studio Build Tools 2019/2022
+    勾选"使用 C++ 的桌面开发"工作负载
 
-2.
-cd D:\work\demo\robot-calibration-tool
-rmdir /s /q node_modules
-npm cache clean --force
-npm install
-npm install node-addon-api node-api-headers
+建议在"x64 Native Tools Command Prompt for VS 20xx"中执行以下所有命令。
 
-3.
-npm run build:camera
-npm run build
+--------------------------------------------------------
+0. 克隆仓库
+--------------------------------------------------------
+  git clone https://github.com/huiyingchenpompom/robot-calibration-tool.git
+  cd robot-calibration-tool
 
-4.
-npm run dev
+  注意：协议头必须是 https://，不能写成 .https://
+
+--------------------------------------------------------
+1. 设置镜像（国内网络，可选）
+--------------------------------------------------------
+  set ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/
+  set ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-builder-binaries/
+
+--------------------------------------------------------
+2. 安装依赖
+--------------------------------------------------------
+  cd path\to\robot-calibration-tool
+  rmdir /s /q node_modules        （重装时清理旧依赖）
+  npm cache clean --force
+  npm install
+  npm install node-addon-api node-api-headers
+
+--------------------------------------------------------
+3. 确认 node.lib 存在（链接 napi_* 符号必须）
+--------------------------------------------------------
+  node -p "require('path').dirname(process.execPath)"
+  （查看 node.exe 目录，例如 C:\Program Files\nodejs）
+
+  dir "C:\Program Files\nodejs\node.lib"
+  （若文件不存在，执行下方步骤下载）
+
+  node -p "process.versions.node"
+  （查看版本号，假设为 20.11.0，则下载：）
+  https://nodejs.org/dist/v20.11.0/node.lib
+  → 保存到 node.exe 同目录，如 C:\Program Files\nodejs\node.lib
+
+--------------------------------------------------------
+4. 编译相机插件
+--------------------------------------------------------
+  npm run build:camera
+
+  （等价于以下命令）
+  cd camera_addon
+  cmake -B build -DCMAKE_BUILD_TYPE=Release
+  cmake --build build --config Release
+  cd ..
+
+  成功后输出：camera_addon\build\Release\camera_addon.node
+
+--------------------------------------------------------
+5. 编译前端 + 打包 Electron
+--------------------------------------------------------
+  npm run build
+
+--------------------------------------------------------
+6. 开发模式（热更新）
+--------------------------------------------------------
+  npm run dev
+
+--------------------------------------------------------
+常见错误速查
+--------------------------------------------------------
+  LNK2019: napi_* 无法解析  → node.lib 缺失，见第3步
+  C4819 / C2001             → 已通过 /utf-8 修复，无需处理
+  cmake 不是内部命令         → CMake 未加入 PATH
+  cl 不是内部命令            → 使用 x64 Native Tools 命令提示符
+
