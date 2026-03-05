@@ -79,6 +79,38 @@ else()
     message(STATUS "Basler Pylon SDK 未找到，Basler 相机功能不可用")
 endif()
 
+# 大恒相机 Galaxy SDK
+# 搜索顺序：标准 Daheng Imaging 安装目录 → micro-i OEM 安装目录 → Linux 默认路径
+find_path(DAHENG_INCLUDE_DIR GxIAPI.h
+    PATHS
+    "C:/Program Files/Daheng Imaging/GalaxySDK/APIDll/Win64/include"
+    "C:/Program Files/Daheng Imaging/GalaxySDK/APIDll/Win32/include"
+    "C:/Program Files/micro-i/sc/camera/inc"
+    "C:/Program Files/micro-i/sc/camera/include"
+    "C:/Program Files/micro-i/sc/camera"
+    "/opt/Galaxy_camera/inc"
+    NO_DEFAULT_PATH
+)
+if(DAHENG_INCLUDE_DIR)
+    message(STATUS "Daheng Galaxy SDK 已找到: ${DAHENG_INCLUDE_DIR}")
+    target_include_directories(camera_addon PRIVATE ${DAHENG_INCLUDE_DIR})
+    target_compile_definitions(camera_addon PRIVATE HAVE_DAHENG_SDK)
+    find_library(DAHENG_LIB GxIAPI
+        PATHS
+        "C:/Program Files/Daheng Imaging/GalaxySDK/APIDll/Win64"
+        "C:/Program Files/micro-i/sc/camera/lib"
+        "C:/Program Files/micro-i/sc/camera/lib/x64"
+        "C:/Program Files/micro-i/sc/camera/libs"
+        "/opt/Galaxy_camera/lib"
+        NO_DEFAULT_PATH
+    )
+    if(DAHENG_LIB)
+        target_link_libraries(camera_addon PRIVATE ${DAHENG_LIB})
+    endif()
+else()
+    message(STATUS "Daheng Galaxy SDK 未找到，大恒相机功能不可用")
+endif()
+
 # 海康威视 MVS SDK
 find_path(HIK_INCLUDE_DIR MvCameraControl.h
     PATHS

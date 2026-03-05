@@ -50,6 +50,15 @@
       b) 项目根目录（npm run download:nodelib 的放置位置）
       c) 从 node-api-headers .def 文件自动生成（无需网络）
 
+  ★ 相机 SDK 自动检测（SDK 缺失时以存根模式编译，不影响构建）：
+    - Basler Pylon : C:/Program Files/Basler/pylon 7/Development/include
+    - Daheng Galaxy: C:/Program Files/Daheng Imaging/GalaxySDK/APIDll/Win64/include
+                     C:/Program Files/micro-i/sc/camera/inc
+                     C:/Program Files/micro-i/sc/camera/include
+                     C:/Program Files/micro-i/sc/camera
+    - HIK MVS      : C:/Program Files (x86)/MVS/Development/Includes
+    若 SDK 安装在其他路径，在 camera_addon/CMakeLists.txt 中手动添加搜索路径。
+
   成功后输出：camera_addon\build\Release\camera_addon.node
 
 --------------------------------------------------------

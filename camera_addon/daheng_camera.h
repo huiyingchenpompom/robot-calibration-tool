@@ -1,7 +1,7 @@
 #pragma once
 #include "camera_base.h"
 
-// 大恒相机实现（存根）
+// 大恒相机实现
 // 依赖 Galaxy SDK: https://www.daheng-imaging.com/
 class DahengCamera : public CameraBase {
 public:
@@ -18,5 +18,6 @@ public:
     std::string getModelName() const override;
 
 private:
+    void* handle_;
     bool connected_;
 };

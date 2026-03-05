@@ -36,6 +36,26 @@ git pull
 
 ---
 
+## 相机 SDK 支持 / Camera SDK Support
+
+`npm run build:camera` 会在 CMake configure 阶段**自动检测**以下相机 SDK。  
+SDK 若未安装，相应相机功能将以存根模式编译（程序可运行，但该品牌相机无法实际连接）。
+
+| 品牌 | SDK | 自动检测的安装路径 |
+|------|-----|------------------|
+| Basler | Pylon SDK | `C:/Program Files/Basler/pylon 7/Development/include` |
+| 大恒 (Daheng) | Galaxy SDK | `C:/Program Files/Daheng Imaging/GalaxySDK/APIDll/Win64/include`<br>`C:/Program Files/micro-i/sc/camera/inc`<br>`C:/Program Files/micro-i/sc/camera/include`<br>`C:/Program Files/micro-i/sc/camera` |
+| 海康 (HIK) | MVS SDK | `C:/Program Files (x86)/MVS/Development/Includes` |
+
+> CMake configure 时会打印检测结果，例如：
+> ```
+> -- Daheng Galaxy SDK 已找到: C:/Program Files/micro-i/sc/camera/inc
+> ```
+> 若显示"未找到"，请确认 SDK 安装在上述路径之一，或在 `camera_addon/CMakeLists.txt` 的
+> `find_path(DAHENG_INCLUDE_DIR ...)` / `find_library(DAHENG_LIB ...)` 中手动添加自定义路径。
+
+---
+
 ## 命令行完整编译步骤 / Command-Line Build
 
 ### 前置条件（Prerequisites）
