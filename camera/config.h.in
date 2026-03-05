@@ -1,0 +1,2 @@
+#cmakedefine MAIN_TYPE @MAIN_TYPE@
+#cmakedefine MAIN_TYPE_NAME @MAIN_TYPE_NAME@

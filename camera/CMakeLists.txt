@@ -1,0 +1,21 @@
+
+if(MSVC)
+add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/source-charset:utf-8>")
+endif()
+
+SET(MAIN_TYPE "\"${CMAKE_CURRENT_SOURCE_DIR}\"")
+SET(MAIN_TYPE_NAME "u8\"相机\"")
+configure_file(config.h.in config.h)
+
+add_subdirectory(node_camera)
+if(COMPILE_HW_CAM)
+    message(STATUS "compile hardware camera")
+    add_subdirectory(driver/camera_basler)
+    add_subdirectory(driver/camera_daheng)
+#    add_subdirectory(driver/camera_dalsa)
+    add_subdirectory(driver/camera_hik)
+#    add_subdirectory(driver/camera_usb)
+#    add_subdirectory(driver/camera_orbbec)
+#    add_subdirectory(driver/camera_opt)
+endif()
+add_subdirectory(driver/camera_simulator)
