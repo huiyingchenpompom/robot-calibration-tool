@@ -50,19 +50,49 @@ void HikCamera::disconnect() {
 
 bool HikCamera::isConnected() const { return connected_; }
 
-std::vector<uint8_t> HikCamera::captureImage() {
+CameraFrame HikCamera::captureImage() {
 #ifdef HAVE_HIK_SDK
     if (!handle_) throw std::runtime_error("相机未连接");
-    MV_CC_StartGrabbing(handle_);
-    MV_FRAME_OUT frameOut = {0};
+    if (MV_CC_StartGrabbing(handle_) != MV_OK) {
+        // 如果已在采集中，继续获取帧即可
+    }
+    MV_FRAME_OUT frameOut = {};
     if (MV_CC_GetImageBuffer(handle_, &frameOut, 1000) != MV_OK) {
         MV_CC_StopGrabbing(handle_);
         throw std::runtime_error("获取图像失败");
     }
-    std::vector<uint8_t> data(frameOut.pBufAddr, frameOut.pBufAddr + frameOut.stFrameInfo.nFrameLen);
+
+    CameraFrame frame;
+    frame.width  = static_cast<int>(frameOut.stFrameInfo.nWidth);
+    frame.height = static_cast<int>(frameOut.stFrameInfo.nHeight);
+
+    // 判断像素格式，参考 CCHikCameraImp.h 中的 PixelFormat 枚举
+    // PixelType_Gvsp_Mono8 = 0x01080001
+    if (frameOut.stFrameInfo.enPixelType == PixelType_Gvsp_Mono8) {
+        frame.channels = 1;
+        frame.pixels.assign(frameOut.pBufAddr,
+                            frameOut.pBufAddr + frame.width * frame.height);
+    } else if (frameOut.stFrameInfo.enPixelType == PixelType_Gvsp_RGB8_Packed) {
+        // RGB → BGR（BMP 需要 BGR 顺序）
+        frame.channels = 3;
+        int pixelCount = frame.width * frame.height;
+        frame.pixels.resize(pixelCount * 3);
+        const uint8_t* src = frameOut.pBufAddr;
+        for (int i = 0; i < pixelCount; ++i) {
+            frame.pixels[i * 3 + 0] = src[i * 3 + 2]; // B
+            frame.pixels[i * 3 + 1] = src[i * 3 + 1]; // G
+            frame.pixels[i * 3 + 2] = src[i * 3 + 0]; // R
+        }
+    } else {
+        // Bayer 及其它格式：以单通道灰度方式显示（像素值仍有效，只是颜色不准）
+        frame.channels = 1;
+        frame.pixels.assign(frameOut.pBufAddr,
+                            frameOut.pBufAddr + frame.width * frame.height);
+    }
+
     MV_CC_FreeImageBuffer(handle_, &frameOut);
     MV_CC_StopGrabbing(handle_);
-    return data;
+    return frame;
 #else
     throw std::runtime_error("HIK SDK 未编译");
 #endif
@@ -93,5 +123,14 @@ void HikCamera::setGamma(double gamma) {
 }
 
 std::string HikCamera::getModelName() const {
-    return connected_ ? "HIK Camera" : "HIK (未连接)";
+#ifdef HAVE_HIK_SDK
+    if (!handle_) return "HIK (未连接)";
+    MVCC_STRINGVALUE stStringValue = {};
+    if (MV_CC_GetStringValue(handle_, "DeviceModelName", &stStringValue) == MV_OK) {
+        return std::string(stStringValue.chCurValue);
+    }
+    return "HIK Camera";
+#else
+    return "HIK (SDK未编译)";
+#endif
 }

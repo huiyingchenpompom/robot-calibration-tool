@@ -60,7 +60,7 @@ void BaslerCamera::disconnect() {
 
 bool BaslerCamera::isConnected() const { return connected_; }
 
-std::vector<uint8_t> BaslerCamera::captureImage() {
+CameraFrame BaslerCamera::captureImage() {
 #ifdef HAVE_PYLON_SDK
     if (!camera_handle_) throw std::runtime_error("相机未连接");
     auto* cam = static_cast<CInstantCamera*>(camera_handle_);
@@ -69,8 +69,25 @@ std::vector<uint8_t> BaslerCamera::captureImage() {
     if (!grabResult->GrabSucceeded()) {
         throw std::runtime_error(std::string("拍摄失败: ") + grabResult->GetErrorDescription().c_str());
     }
-    const uint8_t* pData = static_cast<const uint8_t*>(grabResult->GetBuffer());
-    return std::vector<uint8_t>(pData, pData + grabResult->GetBufferSize());
+    CameraFrame frame;
+    frame.width  = static_cast<int>(grabResult->GetWidth());
+    frame.height = static_cast<int>(grabResult->GetHeight());
+    if (grabResult->GetPixelType() == PixelType_Mono8) {
+        // 灰度图：直接复制（参考 CCBaslerCameraImp::OnImageGrabbed 的灰度分支）
+        frame.channels = 1;
+        const uint8_t* pData = static_cast<const uint8_t*>(grabResult->GetBuffer());
+        frame.pixels.assign(pData, pData + grabResult->GetImageSize());
+    } else {
+        // 彩色图：使用 Pylon 格式转换器转为 BGR8（参考 CCBaslerCameraImp::OnImageGrabbed 的彩色分支）
+        CImageFormatConverter converter;
+        converter.OutputPixelFormat = PixelType_BGR8packed;
+        CPylonImage targetImage;
+        converter.Convert(targetImage, grabResult);
+        frame.channels = 3;
+        const uint8_t* pData = static_cast<const uint8_t*>(targetImage.GetBuffer());
+        frame.pixels.assign(pData, pData + frame.width * frame.height * 3);
+    }
+    return frame;
 #else
     throw std::runtime_error("Basler SDK 未编译");
 #endif

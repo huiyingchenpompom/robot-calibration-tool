@@ -60,7 +60,7 @@ void DahengCamera::disconnect() {
 
 bool DahengCamera::isConnected() const { return connected_; }
 
-std::vector<uint8_t> DahengCamera::captureImage() {
+CameraFrame DahengCamera::captureImage() {
 #ifdef HAVE_DAHENG_SDK
     if (!handle_) throw std::runtime_error("相机未连接");
     GX_DEV_HANDLE hDevice = static_cast<GX_DEV_HANDLE>(handle_);
@@ -71,12 +71,37 @@ std::vector<uint8_t> DahengCamera::captureImage() {
         GXStreamOff(hDevice);
         throw std::runtime_error("获取图像失败");
     }
-    std::vector<uint8_t> data(
-        static_cast<uint8_t*>(pFrameBuffer->pImgBuf),
-        static_cast<uint8_t*>(pFrameBuffer->pImgBuf) + pFrameBuffer->nImgSize);
+
+    CameraFrame frame;
+    frame.width  = static_cast<int>(pFrameBuffer->nWidth);
+    frame.height = static_cast<int>(pFrameBuffer->nHeight);
+
+    // 依据每帧实际字节数推断通道数
+    // Mono8 / Bayer8: nImgSize == width * height（1 字节/像素）
+    // RGB8:           nImgSize == width * height * 3（3 字节/像素）
+    const int monoSize  = frame.width * frame.height;
+    const int colorSize = monoSize * 3;
+    if (pFrameBuffer->nImgSize >= colorSize) {
+        // 3 通道彩色（Galaxy SDK C API 输出 RGB；转为 BGR 以匹配 BMP 格式）
+        frame.channels = 3;
+        const uint8_t* src = static_cast<const uint8_t*>(pFrameBuffer->pImgBuf);
+        frame.pixels.resize(colorSize);
+        for (int i = 0; i < monoSize; ++i) {
+            frame.pixels[i * 3 + 0] = src[i * 3 + 2]; // B
+            frame.pixels[i * 3 + 1] = src[i * 3 + 1]; // G
+            frame.pixels[i * 3 + 2] = src[i * 3 + 0]; // R
+        }
+    } else {
+        // 单通道：Mono8 或 Bayer 原始图（Bayer 显示为灰度图，特征依然可见）
+        frame.channels = 1;
+        frame.pixels.assign(
+            static_cast<uint8_t*>(pFrameBuffer->pImgBuf),
+            static_cast<uint8_t*>(pFrameBuffer->pImgBuf) + monoSize);
+    }
+
     GXQBuf(hDevice, pFrameBuffer);
     GXStreamOff(hDevice);
-    return data;
+    return frame;
 #else
     throw std::runtime_error("大恒相机 Galaxy SDK 未编译");
 #endif

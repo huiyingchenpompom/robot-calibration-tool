@@ -11,7 +11,7 @@ public:
     bool connect(int deviceIndex) override;
     void disconnect() override;
     bool isConnected() const override;
-    std::vector<uint8_t> captureImage() override;
+    CameraFrame captureImage() override;
     void setExposure(double exposureUs) override;
     void setGain(double gainDb) override;
     void setGamma(double gamma) override;
