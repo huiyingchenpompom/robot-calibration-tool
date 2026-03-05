@@ -1,3 +1,7 @@
+0. 克隆仓库（注意：协议头必须是 https:// 而不是 .https://，多一个点会导致 "protocol '.https' is not supported" 错误）
+git clone https://github.com/huiyingchenpompom/robot-calibration-tool.git
+cd robot-calibration-tool
+
 1.
 set ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/
 set ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-builder-binaries/
