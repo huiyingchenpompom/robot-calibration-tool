@@ -136,14 +136,24 @@ if(WIN32)
     endif()
     get_filename_component(NODE_ROOT_DIR "${NODE_EXECUTABLE}" DIRECTORY)
     set(NODE_LIB_PATH "${NODE_ROOT_DIR}/node.lib")
+    set(NODE_LIB_FALLBACK_PATH "${CMAKE_SOURCE_DIR}/../node.lib")
     if(EXISTS "${NODE_LIB_PATH}")
         message(STATUS "node.lib 已找到: ${NODE_LIB_PATH}")
         target_link_libraries(camera_addon PRIVATE "${NODE_LIB_PATH}")
+    elseif(EXISTS "${NODE_LIB_FALLBACK_PATH}")
+        message(STATUS "node.lib 已找到（项目根目录）: ${NODE_LIB_FALLBACK_PATH}")
+        target_link_libraries(camera_addon PRIVATE "${NODE_LIB_FALLBACK_PATH}")
     else()
         message(FATAL_ERROR
-            "未找到 node.lib (查找路径: ${NODE_LIB_PATH})\n"
-            "请从 https://nodejs.org/dist/v${NODE_VERSION}/node.lib 下载，\n"
-            "并将 node.lib 放置到 node.exe 同目录: ${NODE_ROOT_DIR}")
+            "未找到 node.lib\n"
+            "最简单的解决方法：在项目根目录运行\n"
+            "  npm run download:nodelib\n"
+            "该命令会自动下载 node.lib 并无需管理员权限。\n\n"
+            "或手动从以下地址下载：\n"
+            "  https://nodejs.org/dist/v${NODE_VERSION}/node.lib\n"
+            "并将 node.lib 放置到以下任意位置：\n"
+            "  1) node.exe 同目录: ${NODE_ROOT_DIR}\n"
+            "  2) 项目根目录:      ${CMAKE_SOURCE_DIR}/..")
     endif()
 
     set_target_properties(camera_addon PROPERTIES

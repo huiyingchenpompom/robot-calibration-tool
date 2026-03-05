@@ -6,3 +6,4 @@ camera_addon/build/
 *.node
 .DS_Store
 *.log
+node.lib

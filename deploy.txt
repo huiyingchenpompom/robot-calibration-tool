@@ -4,7 +4,7 @@
 ========================================================
 
 【前置条件】
-  - Node.js 18 LTS（官方安装包，自带 node.lib）
+  - Node.js 18 LTS（官方安装包；若 node.lib 缺失可用下面的 download:nodelib 命令获取）
   - CMake 3.15+（已加入 PATH）
   - Visual Studio Build Tools 2019/2022
     勾选"使用 C++ 的桌面开发"工作负载
@@ -35,18 +35,17 @@
   npm install node-addon-api node-api-headers
 
 --------------------------------------------------------
-3. 确认 node.lib 存在（链接 napi_* 符号必须）
+3. 获取 node.lib（链接 napi_* 符号必须）
 --------------------------------------------------------
-  node -p "require('path').dirname(process.execPath)"
-  （查看 node.exe 目录，例如 C:\Program Files\nodejs）
+  npm run download:nodelib
 
-  dir "C:\Program Files\nodejs\node.lib"
-  （若文件不存在，执行下方步骤下载）
+  该命令自动下载 node.lib 到项目根目录，无需管理员权限。
+  CMake 会自动找到它。
 
-  node -p "process.versions.node"
-  （查看版本号，假设为 20.11.0，则下载：）
-  https://nodejs.org/dist/v20.11.0/node.lib
-  → 保存到 node.exe 同目录，如 C:\Program Files\nodejs\node.lib
+  若无法访问外网，请手动下载：
+    node -p "process.versions.node"   （查看版本号）
+    https://nodejs.org/dist/v{版本号}/node.lib
+    → 将 node.lib 放到项目根目录（robot-calibration-tool\node.lib）
 
 --------------------------------------------------------
 4. 编译相机插件
@@ -74,7 +73,7 @@
 --------------------------------------------------------
 常见错误速查
 --------------------------------------------------------
-  LNK2019: napi_* 无法解析  → node.lib 缺失，见第3步
+  LNK2019: napi_* 无法解析  → 运行 npm run download:nodelib
   C4819 / C2001             → 已通过 /utf-8 修复，无需处理
   cmake 不是内部命令         → CMake 未加入 PATH
   cl 不是内部命令            → 使用 x64 Native Tools 命令提示符

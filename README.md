@@ -89,27 +89,29 @@ npm install node-addon-api node-api-headers
 
 ---
 
-### 第三步：确认 node.lib 存在（Windows 链接器必须）
+### 第三步：下载 node.lib（Windows 链接器必须）
 
 所有 `napi_*` 符号由 `node.exe` 导出，链接时必须引用 `node.lib`。  
-官方 Node.js 安装包会自动放置该文件，但请先确认：
+运行以下命令即可**自动下载**（无需管理员权限）：
 
 ```cmd
-REM 查看 node.exe 所在目录
-node -p "require('path').dirname(process.execPath)"
-
-REM 检查 node.lib 是否存在（将路径替换为上一命令的输出）
-dir "C:\Program Files\nodejs\node.lib"
+npm run download:nodelib
 ```
 
-如果 `node.lib` **不存在**，运行以下命令查看 Node.js 版本，然后手动下载：
+该脚本会：
+1. 根据当前 Node.js 版本拼出下载地址（`https://nodejs.org/dist/v{version}/node.lib`）
+2. 将 `node.lib` 下载到**项目根目录**（CMake 会自动找到）
+3. 尝试将其复制到 `node.exe` 所在目录（可选，失败也不影响编译）
+
+**如果自动下载失败**（无法访问外网），可手动处理：
 
 ```cmd
+REM 查看版本号
 node -p "process.versions.node"
-REM 假设版本为 20.11.0，则下载地址为：
+
+REM 例如版本为 20.11.0，则下载地址为：
 REM   https://nodejs.org/dist/v20.11.0/node.lib
-REM 下载后放到 node.exe 的同目录，例如：
-REM   C:\Program Files\nodejs\node.lib
+REM 将下载的 node.lib 放到项目根目录（robot-calibration-tool\node.lib）即可
 ```
 
 ---
@@ -157,7 +159,7 @@ npm run dev
 
 | 错误信息 | 原因 | 解决方法 |
 |----------|------|----------|
-| `LNK2019: 无法解析的外部符号 napi_*` | `node.lib` 缺失或未链接 | 参见第三步，确认 `node.lib` 存在 |
+| `LNK2019: 无法解析的外部符号 napi_*` | `node.lib` 缺失或未链接 | 运行 `npm run download:nodelib` |
 | `C4819` / `C2001 常量中有换行符` | MSVC 以 GBK 解析 UTF-8 源文件 | 已通过 `/utf-8` 编译选项修复，无需手动处理 |
 | `protocol '.https' is not supported` | `git clone` URL 前多了一个点 | 使用 `https://` 而非 `.https://` |
 | `cmake` 不是内部或外部命令 | CMake 未加入 PATH | 重新安装 CMake 并勾选"Add CMake to the system PATH" |
