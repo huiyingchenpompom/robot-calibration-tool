@@ -1,0 +1,47 @@
+# =============================================================================
+# 本地相机 SDK 路径配置
+# Local Camera SDK Path Configuration
+# =============================================================================
+#
+# 使用说明（Quick Start）:
+#   1. 将本文件复制并重命名为 local_sdk_paths.cmake（去掉 .example 后缀）:
+#         copy local_sdk_paths.cmake.example local_sdk_paths.cmake
+#   2. 取消注释对应 SDK 的 set(...) 行，填入实际安装路径
+#   3. 重新运行 cmake 配置即可生效
+#
+#   local_sdk_paths.cmake 已加入 .gitignore，不会提交到版本库，
+#   每台开发机独立维护自己的路径。
+#
+# 说明（Notes）:
+#   - *_ROOT 指向 SDK 的根目录；CMake 会在该目录下自动查找 include/、inc/、lib/ 等子目录
+#   - 路径使用正斜杠 / 或双反斜杠 \\ 均可（CMake 兼容两种写法）
+#   - 只需配置本机已安装的 SDK，未安装的保持注释即可
+#
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Basler Pylon SDK
+# 下载地址: https://www.baslerweb.com/en/sales-support/downloads/software-downloads/
+# 默认安装路径: C:/Program Files/Basler/pylon 7/Development
+# 头文件标志:   <pylon/PylonIncludes.h>
+# -----------------------------------------------------------------------------
+# set(PYLON_ROOT "C:/Program Files/Basler/pylon 7/Development")
+
+# -----------------------------------------------------------------------------
+# 大恒相机 Galaxy SDK (Daheng Imaging)
+# 下载地址: https://www.daheng-imaging.com/
+# 默认安装路径: C:/Program Files/Daheng Imaging/GalaxySDK
+# 头文件标志:   GxIAPI.h
+#
+# 示例（micro-i OEM 安装）:
+#   set(DAHENG_ROOT "C:/Program Files/micro-i/sc/camera")
+# -----------------------------------------------------------------------------
+# set(DAHENG_ROOT "C:/Program Files/Daheng Imaging/GalaxySDK/APIDll/Win64")
+
+# -----------------------------------------------------------------------------
+# 海康威视 MVS SDK (HIK Robotics)
+# 下载地址: https://www.hikrobotics.com/
+# 默认安装路径: C:/Program Files (x86)/MVS/Development
+# 头文件标志:   MvCameraControl.h
+# -----------------------------------------------------------------------------
+# set(HIK_ROOT "C:/Program Files (x86)/MVS/Development")

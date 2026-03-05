@@ -41,18 +41,49 @@ git pull
 `npm run build:camera` 会在 CMake configure 阶段**自动检测**以下相机 SDK。  
 SDK 若未安装，相应相机功能将以存根模式编译（程序可运行，但该品牌相机无法实际连接）。
 
-| 品牌 | SDK | 自动检测的安装路径 |
-|------|-----|------------------|
+| 品牌 | SDK | 内置搜索路径（自动检测） |
+|------|-----|----------------------|
 | Basler | Pylon SDK | `C:/Program Files/Basler/pylon 7/Development/include` |
 | 大恒 (Daheng) | Galaxy SDK | `C:/Program Files/Daheng Imaging/GalaxySDK/APIDll/Win64/include`<br>`C:/Program Files/micro-i/sc/camera/inc`<br>`C:/Program Files/micro-i/sc/camera/include`<br>`C:/Program Files/micro-i/sc/camera` |
 | 海康 (HIK) | MVS SDK | `C:/Program Files (x86)/MVS/Development/Includes` |
 
-> CMake configure 时会打印检测结果，例如：
-> ```
-> -- Daheng Galaxy SDK 已找到: C:/Program Files/micro-i/sc/camera/inc
-> ```
-> 若显示"未找到"，请确认 SDK 安装在上述路径之一，或在 `camera_addon/CMakeLists.txt` 的
-> `find_path(DAHENG_INCLUDE_DIR ...)` / `find_library(DAHENG_LIB ...)` 中手动添加自定义路径。
+### SDK 安装在自定义路径？使用 local_sdk_paths.cmake
+
+若 SDK 不在上述默认路径（例如安装在其他磁盘或自定义目录），按以下步骤配置：
+
+**第一步**：复制模板文件：
+
+```cmd
+cd camera_addon
+copy local_sdk_paths.cmake.example local_sdk_paths.cmake
+```
+
+**第二步**：用文本编辑器打开 `camera_addon\local_sdk_paths.cmake`，取消注释并填入实际路径：
+
+```cmake
+# 示例（大恒 micro-i OEM 安装）:
+set(DAHENG_ROOT "C:/Program Files/micro-i/sc/camera")
+
+# 示例（Basler 自定义安装）:
+# set(PYLON_ROOT "D:/SDK/Basler/pylon7/Development")
+
+# 示例（海康 MVS 自定义安装）:
+# set(HIK_ROOT "D:/SDK/HIK/MVS/Development")
+```
+
+**第三步**：重新运行构建即可：
+
+```cmd
+npm run build:camera
+```
+
+CMake 会打印：
+```
+-- 已加载本地 SDK 路径配置: .../camera_addon/local_sdk_paths.cmake
+-- Daheng Galaxy SDK 已找到: C:/Program Files/micro-i/sc/camera/inc
+```
+
+> `local_sdk_paths.cmake` 已加入 `.gitignore`，不会提交到版本库，每台开发机独立维护自己的路径。
 
 ---
 

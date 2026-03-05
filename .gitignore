@@ -7,3 +7,4 @@ camera_addon/build/
 .DS_Store
 *.log
 node.lib
+camera_addon/local_sdk_paths.cmake

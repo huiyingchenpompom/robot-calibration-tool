@@ -55,9 +55,31 @@ target_compile_definitions(camera_addon PRIVATE
 )
 
 # 可选 SDK 检测
+# ---------------------------------------------------------------
+# 本地 SDK 路径覆盖（local_sdk_paths.cmake）
+#
+# 若 SDK 安装路径不在下方硬编码的默认路径中，可在此文件旁边
+# 创建 local_sdk_paths.cmake（参考 local_sdk_paths.cmake.example），
+# 设置 PYLON_ROOT / DAHENG_ROOT / HIK_ROOT 变量后，CMake 将
+# 优先在这些路径下搜索 SDK。
+# 该文件已加入 .gitignore，不会意外提交到版本库。
+# ---------------------------------------------------------------
+include("${CMAKE_CURRENT_SOURCE_DIR}/local_sdk_paths.cmake" OPTIONAL
+        RESULT_VARIABLE _LOCAL_SDK_PATHS_FILE)
+if(_LOCAL_SDK_PATHS_FILE)
+    message(STATUS "已加载本地 SDK 路径配置: ${_LOCAL_SDK_PATHS_FILE}")
+endif()
+
 # Basler Pylon SDK
+set(_pylon_extra_paths "")
+if(PYLON_ROOT)
+    list(APPEND _pylon_extra_paths
+        "${PYLON_ROOT}/include"
+        "${PYLON_ROOT}")
+endif()
 find_path(PYLON_INCLUDE_DIR pylon/PylonIncludes.h
     PATHS
+    ${_pylon_extra_paths}
     "C:/Program Files/Basler/pylon 7/Development/include"
     "/opt/pylon/include"
     NO_DEFAULT_PATH
@@ -68,6 +90,8 @@ if(PYLON_INCLUDE_DIR)
     target_compile_definitions(camera_addon PRIVATE HAVE_PYLON_SDK)
     find_library(PYLON_LIB PylonBase_v9 GCBase_gcc_v3_1_Basler_pylon
         PATHS
+        "${PYLON_ROOT}/lib/x64"
+        "${PYLON_ROOT}/lib"
         "C:/Program Files/Basler/pylon 7/Development/lib/x64"
         "/opt/pylon/lib"
         NO_DEFAULT_PATH
@@ -81,8 +105,16 @@ endif()
 
 # 大恒相机 Galaxy SDK
 # 搜索顺序：标准 Daheng Imaging 安装目录 → micro-i OEM 安装目录 → Linux 默认路径
+set(_daheng_extra_paths "")
+if(DAHENG_ROOT)
+    list(APPEND _daheng_extra_paths
+        "${DAHENG_ROOT}/inc"
+        "${DAHENG_ROOT}/include"
+        "${DAHENG_ROOT}")
+endif()
 find_path(DAHENG_INCLUDE_DIR GxIAPI.h
     PATHS
+    ${_daheng_extra_paths}
     "C:/Program Files/Daheng Imaging/GalaxySDK/APIDll/Win64/include"
     "C:/Program Files/Daheng Imaging/GalaxySDK/APIDll/Win32/include"
     "C:/Program Files/micro-i/sc/camera/inc"
@@ -97,6 +129,10 @@ if(DAHENG_INCLUDE_DIR)
     target_compile_definitions(camera_addon PRIVATE HAVE_DAHENG_SDK)
     find_library(DAHENG_LIB GxIAPI
         PATHS
+        "${DAHENG_ROOT}/lib/x64"
+        "${DAHENG_ROOT}/lib"
+        "${DAHENG_ROOT}/libs"
+        "${DAHENG_ROOT}"
         "C:/Program Files/Daheng Imaging/GalaxySDK/APIDll/Win64"
         "C:/Program Files/micro-i/sc/camera/lib"
         "C:/Program Files/micro-i/sc/camera/lib/x64"
@@ -112,8 +148,16 @@ else()
 endif()
 
 # 海康威视 MVS SDK
+set(_hik_extra_paths "")
+if(HIK_ROOT)
+    list(APPEND _hik_extra_paths
+        "${HIK_ROOT}/Includes"
+        "${HIK_ROOT}/include"
+        "${HIK_ROOT}")
+endif()
 find_path(HIK_INCLUDE_DIR MvCameraControl.h
     PATHS
+    ${_hik_extra_paths}
     "C:/Program Files (x86)/MVS/Development/Includes"
     "/opt/MVS/include"
     NO_DEFAULT_PATH
@@ -124,6 +168,9 @@ if(HIK_INCLUDE_DIR)
     target_compile_definitions(camera_addon PRIVATE HAVE_HIK_SDK)
     find_library(HIK_LIB MvCameraControl
         PATHS
+        "${HIK_ROOT}/Libraries/win64"
+        "${HIK_ROOT}/lib/x64"
+        "${HIK_ROOT}/lib"
         "C:/Program Files (x86)/MVS/Development/Libraries/win64"
         "/opt/MVS/lib/64"
         NO_DEFAULT_PATH

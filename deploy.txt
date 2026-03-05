@@ -57,7 +57,17 @@
                      C:/Program Files/micro-i/sc/camera/include
                      C:/Program Files/micro-i/sc/camera
     - HIK MVS      : C:/Program Files (x86)/MVS/Development/Includes
-    若 SDK 安装在其他路径，在 camera_addon/CMakeLists.txt 中手动添加搜索路径。
+
+  ★ SDK 安装在自定义路径？创建本地配置文件（一次性操作）：
+    cd camera_addon
+    copy local_sdk_paths.cmake.example local_sdk_paths.cmake
+    （用文本编辑器打开 local_sdk_paths.cmake，取消注释并填入实际 SDK 根目录）
+
+    示例内容：
+      set(DAHENG_ROOT "C:/Program Files/micro-i/sc/camera")
+      set(HIK_ROOT    "D:/SDK/HIK/MVS/Development")
+
+    该文件已加入 .gitignore，不会提交到版本库。
 
   成功后输出：camera_addon\build\Release\camera_addon.node
 
