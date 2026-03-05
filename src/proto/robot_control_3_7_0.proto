@@ -1,0 +1,92 @@
+syntax = "proto3";
+
+package robot_control;
+
+// 机器人控制服务
+service RobotControl {
+  // 连接机器人
+  rpc Connect (ConnectRequest) returns (ConnectResponse);
+  // 断开连接
+  rpc Disconnect (DisconnectRequest) returns (DisconnectResponse);
+  // PTP 点对点运动
+  rpc MovePTP (MovePTPRequest) returns (MovePTPResponse);
+  // 获取当前关节角度
+  rpc GetJointPositions (GetJointPositionsRequest) returns (GetJointPositionsResponse);
+  // 紧急停止
+  rpc EmergencyStop (EmergencyStopRequest) returns (EmergencyStopResponse);
+  // 获取机器人状态
+  rpc GetRobotStatus (GetRobotStatusRequest) returns (GetRobotStatusResponse);
+}
+
+// 连接请求
+message ConnectRequest {
+  string ip = 1;
+  int32 port = 2;
+}
+
+// 连接响应
+message ConnectResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// 断开连接请求
+message DisconnectRequest {}
+
+// 断开连接响应
+message DisconnectResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// 关节角度
+message JointAngles {
+  double j1 = 1;
+  double j2 = 2;
+  double j3 = 3;
+  double j4 = 4;
+  double j5 = 5;
+  double j6 = 6;
+}
+
+// PTP 运动请求
+message MovePTPRequest {
+  JointAngles target = 1;
+  double speed = 2;       // 速度系数 0.0~1.0
+  double acceleration = 3; // 加速度系数 0.0~1.0
+}
+
+// PTP 运动响应
+message MovePTPResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// 获取关节角度请求
+message GetJointPositionsRequest {}
+
+// 获取关节角度响应
+message GetJointPositionsResponse {
+  JointAngles joints = 1;
+  bool success = 2;
+}
+
+// 紧急停止请求
+message EmergencyStopRequest {}
+
+// 紧急停止响应
+message EmergencyStopResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// 机器人状态请求
+message GetRobotStatusRequest {}
+
+// 机器人状态
+message GetRobotStatusResponse {
+  string state = 1;       // idle / moving / error
+  JointAngles joints = 2;
+  bool is_powered = 3;
+  string error_message = 4;
+}
