@@ -42,7 +42,7 @@ git pull
 
 | 工具 | 最低版本 | 说明 |
 |------|----------|------|
-| [Node.js](https://nodejs.org/) | 18 LTS | 官方安装包会自动在 node.exe 同目录放置 `node.lib` |
+| [Node.js](https://nodejs.org/) | 18 LTS | 无需 `node.lib`——CMake 会自动生成 |
 | [CMake](https://cmake.org/download/) | 3.15 | 需加入 PATH |
 | Visual Studio Build Tools | 2019 / 2022 | 需勾选"使用 C++ 的桌面开发"工作负载（含 MSVC + Windows SDK） |
 
@@ -84,39 +84,13 @@ set ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-buil
 
 ```cmd
 npm install
-npm install node-addon-api node-api-headers
 ```
+
+> `node-addon-api` 和 `node-api-headers` 已在 `package.json` 的 `dependencies` 中，`npm install` 会自动安装。
 
 ---
 
-### 第三步：下载 node.lib（Windows 链接器必须）
-
-所有 `napi_*` 符号由 `node.exe` 导出，链接时必须引用 `node.lib`。  
-运行以下命令即可**自动下载**（无需管理员权限）：
-
-```cmd
-npm run download:nodelib
-```
-
-该脚本会：
-1. 根据当前 Node.js 版本拼出下载地址（`https://nodejs.org/dist/v{version}/node.lib`）
-2. 将 `node.lib` 下载到**项目根目录**（CMake 会自动找到）
-3. 尝试将其复制到 `node.exe` 所在目录（可选，失败也不影响编译）
-
-**如果自动下载失败**（无法访问外网），可手动处理：
-
-```cmd
-REM 查看版本号
-node -p "process.versions.node"
-
-REM 例如版本为 20.11.0，则下载地址为：
-REM   https://nodejs.org/dist/v20.11.0/node.lib
-REM 将下载的 node.lib 放到项目根目录（robot-calibration-tool\node.lib）即可
-```
-
----
-
-### 第四步：编译相机插件（camera_addon）
+### 第三步：编译相机插件（camera_addon）
 
 ```cmd
 npm run build:camera
@@ -131,6 +105,12 @@ cmake --build build --config Release
 cd ..
 ```
 
+> **无需手动处理 `node.lib`。**  
+> CMake 会按以下顺序自动找到或生成所需的 `node.lib`：
+> 1. Node.js 安装目录（官方安装包标准位置）
+> 2. 项目根目录（`npm run download:nodelib` 的下载位置）
+> 3. 从 `node-api-headers` 提供的 `.def` 文件使用 `lib.exe` **自动生成**（无需网络、无需管理员权限）
+
 编译成功后输出文件位于：
 
 ```
@@ -139,7 +119,7 @@ camera_addon\build\Release\camera_addon.node
 
 ---
 
-### 第五步：编译前端 + 打包 Electron
+### 第四步：编译前端 + 打包 Electron
 
 ```cmd
 npm run build
@@ -147,7 +127,7 @@ npm run build
 
 ---
 
-### 第六步：开发模式运行（热更新）
+### 第五步：开发模式运行（热更新）
 
 ```cmd
 npm run dev
@@ -159,7 +139,7 @@ npm run dev
 
 | 错误信息 | 原因 | 解决方法 |
 |----------|------|----------|
-| `LNK2019: 无法解析的外部符号 napi_*` | `node.lib` 缺失或未链接 | 运行 `npm run download:nodelib` |
+| `LNK2019: 无法解析的外部符号 napi_*` | `node.lib` 缺失或生成失败 | 确认已运行 `npm install`；若自动生成失败，运行 `npm run download:nodelib` |
 | `C4819` / `C2001 常量中有换行符` | MSVC 以 GBK 解析 UTF-8 源文件 | 已通过 `/utf-8` 编译选项修复，无需手动处理 |
 | `protocol '.https' is not supported` | `git clone` URL 前多了一个点 | 使用 `https://` 而非 `.https://` |
 | `cmake` 不是内部或外部命令 | CMake 未加入 PATH | 重新安装 CMake 并勾选"Add CMake to the system PATH" |

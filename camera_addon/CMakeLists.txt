@@ -110,10 +110,15 @@ if(WIN32)
     # 导致的 C4819 警告和 C2001 "常量中有换行符" 编译错误
     target_compile_options(camera_addon PRIVATE /utf-8)
 
-    # 链接 node.lib，提供 napi_* 导出符号。
-    # node.lib 与 node.exe 位于同一目录（Node.js 官方安装目录）。
-    # 如果 node.lib 不存在，说明 Node.js 未安装完整开发文件，
-    # 可从 https://nodejs.org/dist/v{version}/node.lib 下载并放置到 node.exe 同目录。
+    # ---------------------------------------------------------------
+    # 定位 node.lib（提供 napi_* 导出符号的 Windows 导入库）
+    #
+    # 搜索顺序：
+    #   1. node.exe 所在目录（Node.js 官方安装包的标准位置）
+    #   2. 项目根目录（npm run download:nodelib 的下载位置）
+    #   3. 从 node-api-headers 提供的 .def 文件自动生成
+    #      ── 只需 npm install，无需下载、无需管理员权限 ──
+    # ---------------------------------------------------------------
     execute_process(
         COMMAND node -p "process.execPath"
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..
@@ -135,25 +140,86 @@ if(WIN32)
         set(NODE_VERSION "unknown")
     endif()
     get_filename_component(NODE_ROOT_DIR "${NODE_EXECUTABLE}" DIRECTORY)
-    set(NODE_LIB_PATH "${NODE_ROOT_DIR}/node.lib")
-    set(NODE_LIB_FALLBACK_PATH "${CMAKE_SOURCE_DIR}/../node.lib")
-    if(EXISTS "${NODE_LIB_PATH}")
-        message(STATUS "node.lib 已找到: ${NODE_LIB_PATH}")
-        target_link_libraries(camera_addon PRIVATE "${NODE_LIB_PATH}")
-    elseif(EXISTS "${NODE_LIB_FALLBACK_PATH}")
-        message(STATUS "node.lib 已找到（项目根目录）: ${NODE_LIB_FALLBACK_PATH}")
-        target_link_libraries(camera_addon PRIVATE "${NODE_LIB_FALLBACK_PATH}")
+
+    # --- 候选路径列表 ---
+    set(FOUND_NODE_LIB "")
+    foreach(CANDIDATE IN ITEMS
+            "${NODE_ROOT_DIR}/node.lib"
+            "${CMAKE_SOURCE_DIR}/../node.lib")
+        if(EXISTS "${CANDIDATE}")
+            set(FOUND_NODE_LIB "${CANDIDATE}")
+            break()
+        endif()
+    endforeach()
+
+    if(FOUND_NODE_LIB)
+        message(STATUS "node.lib 已找到: ${FOUND_NODE_LIB}")
+        target_link_libraries(camera_addon PRIVATE "${FOUND_NODE_LIB}")
     else()
-        message(FATAL_ERROR
-            "未找到 node.lib\n"
-            "最简单的解决方法：在项目根目录运行\n"
-            "  npm run download:nodelib\n"
-            "该命令会自动下载 node.lib 并无需管理员权限。\n\n"
-            "或手动从以下地址下载：\n"
-            "  https://nodejs.org/dist/v${NODE_VERSION}/node.lib\n"
-            "并将 node.lib 放置到以下任意位置：\n"
-            "  1) node.exe 同目录: ${NODE_ROOT_DIR}\n"
-            "  2) 项目根目录:      ${CMAKE_SOURCE_DIR}/..")
+        # --- 候选路径均未找到，从 node-api-headers .def 文件自动生成 ---
+        message(STATUS "node.lib 未找到，正在从 node-api-headers .def 文件自动生成…")
+
+        execute_process(
+            COMMAND node -p "require('node-api-headers').def_paths.node_api_def"
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..
+            OUTPUT_VARIABLE NODE_API_DEF_PATH
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            RESULT_VARIABLE DEF_QUERY_RESULT
+        )
+        # 去掉引号并统一为正斜杠
+        string(REPLACE "\"" "" NODE_API_DEF_PATH "${NODE_API_DEF_PATH}")
+        string(REPLACE "\\" "/" NODE_API_DEF_PATH "${NODE_API_DEF_PATH}")
+
+        # 找到与 cl.exe 同目录的 lib.exe（MSVC 导入库生成工具）
+        get_filename_component(MSVC_BIN_DIR "${CMAKE_CXX_COMPILER}" DIRECTORY)
+        find_program(LIB_EXECUTABLE NAMES lib HINTS "${MSVC_BIN_DIR}" DOC "MSVC lib.exe")
+        if(NOT LIB_EXECUTABLE AND CMAKE_AR)
+            set(LIB_EXECUTABLE "${CMAKE_AR}")
+        endif()
+
+        if(NOT DEF_QUERY_RESULT EQUAL 0 OR NOT EXISTS "${NODE_API_DEF_PATH}")
+            message(FATAL_ERROR
+                "未找到 node.lib，且无法从 node-api-headers 获取 .def 文件路径（node-api-headers 可能未安装）。\n"
+                "请先运行: npm install\n"
+                "若仍失败，运行: npm run download:nodelib\n"
+                "或从 https://nodejs.org/dist/v${NODE_VERSION}/node.lib 手动下载\n"
+                "并将文件放到项目根目录或 node.exe 所在目录: ${NODE_ROOT_DIR}")
+        endif()
+        if(NOT LIB_EXECUTABLE)
+            message(FATAL_ERROR
+                "未找到 node.lib，且找不到 lib.exe（无法自动生成）。\n"
+                "请在 x64 Native Tools Command Prompt 中运行，确保 MSVC 工具在 PATH 中。\n"
+                "或运行: npm run download:nodelib")
+        endif()
+
+        if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+            set(LIB_MACHINE "X64")
+        else()
+            set(LIB_MACHINE "X86")
+        endif()
+
+        set(GENERATED_NODE_LIB "${CMAKE_BINARY_DIR}/node.lib")
+        execute_process(
+            COMMAND "${LIB_EXECUTABLE}"
+                    "/def:${NODE_API_DEF_PATH}"
+                    "/machine:${LIB_MACHINE}"
+                    "/out:${GENERATED_NODE_LIB}"
+            RESULT_VARIABLE LIB_GEN_RESULT
+            OUTPUT_VARIABLE LIB_GEN_OUTPUT
+            ERROR_VARIABLE  LIB_GEN_ERROR
+        )
+
+        if(LIB_GEN_RESULT EQUAL 0 AND EXISTS "${GENERATED_NODE_LIB}")
+            message(STATUS "node.lib 已自动生成: ${GENERATED_NODE_LIB}")
+            target_link_libraries(camera_addon PRIVATE "${GENERATED_NODE_LIB}")
+        else()
+            message(WARNING "lib.exe 生成 node.lib 失败:\n${LIB_GEN_OUTPUT}\n${LIB_GEN_ERROR}")
+            message(FATAL_ERROR
+                "无法自动生成 node.lib。\n"
+                "请在项目根目录运行: npm run download:nodelib\n"
+                "或从 https://nodejs.org/dist/v${NODE_VERSION}/node.lib 手动下载\n"
+                "并将文件放到项目根目录或 node.exe 所在目录: ${NODE_ROOT_DIR}")
+        endif()
     endif()
 
     set_target_properties(camera_addon PROPERTIES

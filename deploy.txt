@@ -4,7 +4,7 @@
 ========================================================
 
 【前置条件】
-  - Node.js 18 LTS（官方安装包；若 node.lib 缺失可用下面的 download:nodelib 命令获取）
+  - Node.js 18 LTS（无需 node.lib——CMake 自动生成）
   - CMake 3.15+（已加入 PATH）
   - Visual Studio Build Tools 2019/2022
     勾选"使用 C++ 的桌面开发"工作负载
@@ -32,23 +32,9 @@
   rmdir /s /q node_modules        （重装时清理旧依赖）
   npm cache clean --force
   npm install
-  npm install node-addon-api node-api-headers
 
 --------------------------------------------------------
-3. 获取 node.lib（链接 napi_* 符号必须）
---------------------------------------------------------
-  npm run download:nodelib
-
-  该命令自动下载 node.lib 到项目根目录，无需管理员权限。
-  CMake 会自动找到它。
-
-  若无法访问外网，请手动下载：
-    node -p "process.versions.node"   （查看版本号）
-    https://nodejs.org/dist/v{版本号}/node.lib
-    → 将 node.lib 放到项目根目录（robot-calibration-tool\node.lib）
-
---------------------------------------------------------
-4. 编译相机插件
+3. 编译相机插件
 --------------------------------------------------------
   npm run build:camera
 
@@ -58,22 +44,28 @@
   cmake --build build --config Release
   cd ..
 
+  ★ node.lib 无需手动处理。
+    CMake 会依次尝试：
+      a) Node.js 安装目录（官方安装包标准位置）
+      b) 项目根目录（npm run download:nodelib 的放置位置）
+      c) 从 node-api-headers .def 文件自动生成（无需网络）
+
   成功后输出：camera_addon\build\Release\camera_addon.node
 
 --------------------------------------------------------
-5. 编译前端 + 打包 Electron
+4. 编译前端 + 打包 Electron
 --------------------------------------------------------
   npm run build
 
 --------------------------------------------------------
-6. 开发模式（热更新）
+5. 开发模式（热更新）
 --------------------------------------------------------
   npm run dev
 
 --------------------------------------------------------
 常见错误速查
 --------------------------------------------------------
-  LNK2019: napi_* 无法解析  → 运行 npm run download:nodelib
+  LNK2019: napi_* 无法解析  → 确认已 npm install；若仍失败运行 npm run download:nodelib
   C4819 / C2001             → 已通过 /utf-8 修复，无需处理
   cmake 不是内部命令         → CMake 未加入 PATH
   cl 不是内部命令            → 使用 x64 Native Tools 命令提示符
