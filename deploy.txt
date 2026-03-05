@@ -1,0 +1,17 @@
+1.
+set ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/
+set ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-builder-binaries/
+
+2.
+cd D:\work\demo\robot-calibration-tool
+rmdir /s /q node_modules
+npm cache clean --force
+npm install
+npm install node-addon-api node-api-headers
+
+3.
+npm run build:camera
+npm run build
+
+4.
+npm run dev
