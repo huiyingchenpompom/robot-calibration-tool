@@ -39,9 +39,9 @@ static std::vector<uint8_t> encodeFrameToBmp(const CameraFrame& frame) {
     }
 
     // BMP 每行需对齐到 4 字节
-    const int bpp      = 3;
-    const int rowStride  = (frame.width * bpp + 3) & ~3;
-    const int pixelBytes = rowStride * frame.height;
+    const int bpp       = 3;
+    const int rowBytes  = (frame.width * bpp + 3) & ~3;
+    const int pixelBytes = rowBytes * frame.height;
     const int fileSize   = 54 + pixelBytes;
 
     std::vector<uint8_t> bmp(fileSize, 0);
@@ -78,7 +78,7 @@ static std::vector<uint8_t> encodeFrameToBmp(const CameraFrame& frame) {
 
     // 像素数据
     for (int y = 0; y < frame.height; ++y) {
-        uint8_t* dst = bmp.data() + 54 + y * rowStride;
+        uint8_t* dst = bmp.data() + 54 + y * rowBytes;
         if (frame.channels == 1) {
             // 灰度 → 24-bit BGR (R=G=B=灰度值)
             const uint8_t* src = frame.pixels.data() + y * frame.width;
@@ -95,7 +95,6 @@ static std::vector<uint8_t> encodeFrameToBmp(const CameraFrame& frame) {
         }
         // 行末填充字节已在 vector 初始化时清零
     }
-
     return bmp;
 }
 

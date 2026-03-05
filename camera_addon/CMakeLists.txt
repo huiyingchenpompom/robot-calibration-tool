@@ -143,6 +143,30 @@ if(DAHENG_INCLUDE_DIR)
     if(DAHENG_LIB)
         target_link_libraries(camera_addon PRIVATE ${DAHENG_LIB})
     endif()
+
+    # 检测大恒 Galaxy C++ API（GalaxyIncludes.h / GxIAPICPP）
+    # camera/driver/camera_daheng/CCDahengCameraImp.h 使用 C++ API；
+    # 若头文件与 GxIAPI.h 在同一目录，则同时链接 GxIAPICPP 库。
+    find_file(GALAXY_CPP_HEADER GalaxyIncludes.h
+        PATHS ${DAHENG_INCLUDE_DIR}
+        NO_DEFAULT_PATH)
+    if(GALAXY_CPP_HEADER)
+        message(STATUS "Daheng Galaxy C++ API 已找到: ${GALAXY_CPP_HEADER}")
+        target_compile_definitions(camera_addon PRIVATE HAVE_GALAXY_CPP_SDK)
+        find_library(DAHENG_CPP_LIB GxIAPICPP
+            PATHS
+            "${DAHENG_ROOT}/lib/x64"
+            "${DAHENG_ROOT}/lib"
+            "${DAHENG_ROOT}/libs"
+            "${DAHENG_ROOT}"
+            "C:/Program Files/Daheng Imaging/GalaxySDK/APIDll/Win64"
+            "C:/Program Files/micro-i/sc/camera/lib"
+            "C:/Program Files/micro-i/sc/camera/lib/x64"
+            NO_DEFAULT_PATH)
+        if(DAHENG_CPP_LIB)
+            target_link_libraries(camera_addon PRIVATE ${DAHENG_CPP_LIB})
+        endif()
+    endif()
 else()
     message(STATUS "Daheng Galaxy SDK 未找到，大恒相机功能不可用")
 endif()
@@ -159,6 +183,9 @@ find_path(HIK_INCLUDE_DIR MvCameraControl.h
     PATHS
     ${_hik_extra_paths}
     "C:/Program Files (x86)/MVS/Development/Includes"
+    # micro-i OEM 套件（camera/ 同目录下已有 SDK 头文件时优先命中）
+    "C:/Program Files/micro-i/sc/camera/inc"
+    "C:/Program Files/micro-i/sc/camera/include"
     "/opt/MVS/include"
     NO_DEFAULT_PATH
 )
@@ -172,6 +199,9 @@ if(HIK_INCLUDE_DIR)
         "${HIK_ROOT}/lib/x64"
         "${HIK_ROOT}/lib"
         "C:/Program Files (x86)/MVS/Development/Libraries/win64"
+        # micro-i OEM 套件库目录
+        "C:/Program Files/micro-i/sc/camera/lib"
+        "C:/Program Files/micro-i/sc/camera/lib/x64"
         "/opt/MVS/lib/64"
         NO_DEFAULT_PATH
     )

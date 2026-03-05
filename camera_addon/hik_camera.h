@@ -20,4 +20,6 @@ public:
 private:
     void* handle_;
     bool connected_;
+    bool is_opened_;   // MV_CC_OpenDevice 已完成（参考 CCHikCameraImp::m_isOpened）
+    bool is_grabbing_; // MV_CC_StartGrabbing 已完成（参考 CCHikCameraImp::m_isGrabbing）
 };

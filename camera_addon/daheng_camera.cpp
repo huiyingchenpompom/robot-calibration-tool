@@ -27,17 +27,33 @@ bool DahengCamera::connect(int deviceIndex) {
 #ifdef HAVE_DAHENG_SDK
     uint32_t nDeviceNum = 0;
     if (GXUpdateAllDeviceList(&nDeviceNum, 1000) != GX_STATUS_SUCCESS) {
-        throw std::runtime_error("枚举大恒相机失败");
+        throw std::runtime_error("枚举大恒相机失败，请检查 Galaxy 驱动是否安装");
     }
     if (nDeviceNum == 0 || deviceIndex >= (int)nDeviceNum) {
-        throw std::runtime_error("未找到大恒相机或设备序号超出范围");
+        throw std::runtime_error("未找到大恒相机或设备序号超出范围，共扫描到 "
+                                 + std::to_string(nDeviceNum) + " 台相机");
     }
+
     GX_DEV_HANDLE hDevice = nullptr;
     // GXOpenDeviceByIndex 使用 1-based 索引
+    // 参考 CCDahengCameraImp::openDevice 中按 IP/SN 打开设备的等效操作
     if (GXOpenDeviceByIndex((uint32_t)deviceIndex + 1, &hDevice) != GX_STATUS_SUCCESS) {
-        throw std::runtime_error("打开大恒相机失败");
+        throw std::runtime_error(
+            "打开大恒相机失败，请检查：\n"
+            "1. 相机网线/USB 连接是否正常\n"
+            "2. Galaxy Viewer 是否占用了相机");
     }
-    handle_ = hDevice;
+
+    // 参考 CCDahengCameraImp::openDevice + setTriggerMode(ContinuousTriggerMode)：
+    // ① 设置连续采集模式 ——防止相机处于单帧模式
+    GXSetEnum(hDevice, GX_ENUM_ACQUISITION_MODE, GX_ACQ_MODE_CONTINUOUS);
+    // ② 关闭触发模式 ——防止相机等待外部硬触发信号导致 GXDQBuf 超时
+    //    对应 CCDahengCameraImp::setTriggerMode(ContinuousTriggerMode) → TriggerMode="Off"
+    GXSetEnum(hDevice, GX_ENUM_TRIGGER_MODE, GX_TRIGGER_MODE_OFF);
+    // ③ 参考 CCDahengCameraImp::openDevice：启用 Gamma（相机不支持时忽略）
+    GXSetBool(hDevice, GX_BOOL_GAMMA_ENABLE, true);
+
+    handle_    = hDevice;
     connected_ = true;
     return true;
 #else
