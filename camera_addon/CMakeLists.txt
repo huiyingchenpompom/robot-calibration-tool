@@ -106,6 +106,9 @@ endif()
 # Windows 特定设置
 if(WIN32)
     target_compile_definitions(camera_addon PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
+    # /utf-8: 告知 MSVC 源文件和执行字符集均为 UTF-8，解决中文字符在 GBK 代码页下
+    # 导致的 C4819 警告和 C2001 "常量中有换行符" 编译错误
+    target_compile_options(camera_addon PRIVATE /utf-8)
     set_target_properties(camera_addon PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/Release
         LIBRARY_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/Release
