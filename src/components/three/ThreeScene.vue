@@ -20,7 +20,7 @@ let sceneManager: SceneManager | null = null
 const sceneStore = useSceneStore()
 const calibStore = useCalibrationStore()
 const { settings, trajectoryModelData, platformModelData, robotUrdfContent, robotStlFiles } = storeToRefs(sceneStore)
-const { currentJointAngles } = storeToRefs(calibStore)
+const { currentJointAngles, originalTrajectory, goldenImageIds } = storeToRefs(calibStore)
 
 onMounted(() => {
   if (containerRef.value) {
@@ -66,6 +66,13 @@ watch([robotUrdfContent, robotStlFiles], ([urdfContent, stlFiles]) => {
   } catch (e) {
     sceneStore.setModelLoadError(`加载机械臂模型失败: ${e instanceof Error ? e.message : String(e)}`)
   }
+}, { deep: true })
+
+// 轨迹文件导入后：将所有拍照点以矩形块可视化到 3D 场景
+watch([originalTrajectory, goldenImageIds], ([traj, gIds]) => {
+  const pictureIdList = traj?.view_point_CAD?.picture_id_list ?? []
+  const goldenSet = new Set(gIds as number[])
+  sceneManager?.setShotPoints(pictureIdList, goldenSet)
 }, { deep: true })
 
 function resetCamera() {

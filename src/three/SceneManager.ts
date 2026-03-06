@@ -2,7 +2,7 @@
 import * as THREE from 'three'
 import { OrbitControls, STLLoader } from 'three-stdlib'
 import { parseURDF } from './URDFParser'
-import type { SceneSettings, JointAngles, Pose6D } from '../types'
+import type { SceneSettings, JointAngles, Pose6D, ViewPointCAD } from '../types'
 
 // Multiplier applied to the minimum bounding-sphere-based camera distance when auto-fitting
 const CAMERA_DISTANCE_MULTIPLIER = 1.8
@@ -23,6 +23,7 @@ export class SceneManager {
   private axesHelper: THREE.AxesHelper | null = null
   private trajectoryPoints: THREE.Points | null = null
   private cadPointsGroup: THREE.Group = new THREE.Group()
+  private shotPointsGroup: THREE.Group = new THREE.Group()
   private trajectoryLinesGroup: THREE.Group = new THREE.Group()
 
   // 导入的模型组
@@ -62,6 +63,7 @@ export class SceneManager {
 
     // 分组
     this.scene.add(this.cadPointsGroup)
+    this.scene.add(this.shotPointsGroup)
     this.scene.add(this.trajectoryLinesGroup)
     this.scene.add(this.robotModelGroup)
 
@@ -154,6 +156,61 @@ export class SceneManager {
     })
   }
 
+  /**
+   * 显示轨迹文件的拍照点（每个 picture_id 对应一个矩形块 + 球心标记）。
+   * 普通拍照点：青色；黄金图像点：金黄色。
+   */
+  setShotPoints(pictureIdList: ViewPointCAD[], goldenIds: Set<number> = new Set()): void {
+    this.clearShotPoints()
+
+    if (pictureIdList.length === 0) return
+
+    pictureIdList.forEach(vp => {
+      const isGolden = goldenIds.has(vp.picture_id)
+      const color = isGolden ? 0xfbbf24 : 0x22d3ee  // 金黄 : 青色
+
+      const [x, y, z, rx, ry, rz] = vp.cad_point
+      const markerGroup = new THREE.Group()
+      markerGroup.position.set(x, y, z)
+      markerGroup.rotation.set(rx, ry, rz)
+
+      // 矩形块（代表相机视野在工件上的投影区域）
+      const planeGeo = new THREE.PlaneGeometry(0.04, 0.04)
+      const planeMat = new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide, transparent: true, opacity: 0.75 })
+      markerGroup.add(new THREE.Mesh(planeGeo, planeMat))
+
+      // 边框线（让矩形轮廓更清晰）
+      const edgesGeo = new THREE.EdgesGeometry(planeGeo)
+      const edgesMat = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.9 })
+      markerGroup.add(new THREE.LineSegments(edgesGeo, edgesMat))
+
+      // 中心球标记
+      const sphereGeo = new THREE.SphereGeometry(0.008, 6, 6)
+      const sphereMat = new THREE.MeshBasicMaterial({ color })
+      markerGroup.add(new THREE.Mesh(sphereGeo, sphereMat))
+
+      this.shotPointsGroup.add(markerGroup)
+    })
+
+    // 自动调整视角以完整显示所有拍照点
+    if (this.shotPointsGroup.children.length > 0) {
+      this.fitCameraToObject(this.shotPointsGroup)
+    }
+  }
+
+  /** 释放并清空 shotPointsGroup 的所有子对象 */
+  private clearShotPoints(): void {
+    this.shotPointsGroup.traverse(obj => {
+      if ('geometry' in obj && obj.geometry instanceof THREE.BufferGeometry) {
+        obj.geometry.dispose()
+      }
+      if ('material' in obj && obj.material instanceof THREE.Material) {
+        obj.material.dispose()
+      }
+    })
+    this.shotPointsGroup.clear()
+  }
+
   /** 显示轨迹线 */
   showTrajectoryLine(points: THREE.Vector3[], color: number = 0xf59e0b) {
     this.trajectoryLinesGroup.clear()
@@ -170,6 +227,7 @@ export class SceneManager {
       this.trajectoryPoints = null
     }
     this.cadPointsGroup.clear()
+    this.clearShotPoints()
     this.trajectoryLinesGroup.clear()
   }
 
