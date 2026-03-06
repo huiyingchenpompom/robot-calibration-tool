@@ -1,10 +1,13 @@
 {
   "name": "robot-calibration-tool",
   "version": "1.0.0",
+  "description": "Robot hand-eye calibration tool for industrial automation",
+  "author": "huiyingchenpompom",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "clean": "node -e \"const fs=require('fs');try{fs.rmSync('release',{recursive:true,force:true});console.log('cleaned release/')}catch(e){if(e.code!=='ENOENT')throw e}\"",
     "build": "vite build && electron-builder",
     "build:vite": "vite build",
     "build:camera": "cd camera_addon && cmake -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release",

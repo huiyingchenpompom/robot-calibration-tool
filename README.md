@@ -196,3 +196,4 @@ npm run dev
 | `protocol '.https' is not supported` | `git clone` URL 前多了一个点 | 使用 `https://` 而非 `.https://` |
 | `cmake` 不是内部或外部命令 | CMake 未加入 PATH | 重新安装 CMake 并勾选"Add CMake to the system PATH" |
 | `cl` 不是内部或外部命令 | MSVC 环境未激活 | 使用"x64 Native Tools Command Prompt for VS 20xx"运行所有命令 |
+| `remove ...app.asar: The process cannot access the file because it is being used by another process` | 上次打包的 Electron 应用仍在运行，Windows 文件被锁 | **关闭所有"Robot Calibration Tool"窗口**，再运行 `npm run build`；若仍失败，运行 `npm run clean` 删除 `release/` 目录后再重试 |
