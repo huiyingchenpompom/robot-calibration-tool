@@ -1,0 +1,3 @@
+#cmakedefine SUB_TYPE @SUB_TYPE@
+#cmakedefine SUB_TYPE_NAME @SUB_TYPE_NAME@
+#cmakedefine DEVICE_NODE @DEVICE_NODE@

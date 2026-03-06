@@ -1,0 +1,100 @@
+========================================================
+  Robot Calibration Tool — 命令行编译快速参考
+  完整说明请见 README.md
+========================================================
+
+【前置条件】
+  - Node.js 18 LTS（无需 node.lib——CMake 自动生成）
+  - CMake 3.15+（已加入 PATH）
+  - Visual Studio Build Tools 2019/2022
+    勾选"使用 C++ 的桌面开发"工作负载
+
+建议在"x64 Native Tools Command Prompt for VS 20xx"中执行以下所有命令。
+
+--------------------------------------------------------
+0. 克隆仓库
+--------------------------------------------------------
+  git clone https://github.com/huiyingchenpompom/robot-calibration-tool.git
+  cd robot-calibration-tool
+
+  注意：协议头必须是 https://，不能写成 .https://
+
+--------------------------------------------------------
+1. 设置镜像（国内网络，可选）
+--------------------------------------------------------
+  set ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/
+  set ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-builder-binaries/
+
+--------------------------------------------------------
+2. 安装依赖
+--------------------------------------------------------
+  cd path\to\robot-calibration-tool
+  rmdir /s /q node_modules        （重装时清理旧依赖）
+  npm cache clean --force
+  npm install
+
+--------------------------------------------------------
+3. 编译相机插件
+--------------------------------------------------------
+  npm run build:camera
+
+  （等价于以下命令）
+  cd camera_addon
+  cmake -B build -DCMAKE_BUILD_TYPE=Release
+  cmake --build build --config Release
+  cd ..
+
+  ★ node.lib 无需手动处理。
+    CMake 会依次尝试：
+      a) Node.js 安装目录（官方安装包标准位置）
+      b) 项目根目录（npm run download:nodelib 的放置位置）
+      c) 从 node-api-headers .def 文件自动生成（无需网络）
+
+  ★ 相机 SDK 自动检测（SDK 缺失时以存根模式编译，不影响构建）：
+    - Basler Pylon : C:/Program Files/Basler/pylon 7/Development/include
+    - Daheng Galaxy: C:/Program Files/Daheng Imaging/GalaxySDK/APIDll/Win64/include
+                     C:/Program Files/micro-i/sc/camera/inc
+                     C:/Program Files/micro-i/sc/camera/include
+                     C:/Program Files/micro-i/sc/camera
+    - HIK MVS      : C:/Program Files (x86)/MVS/Development/Includes
+
+  ★ SDK 安装在自定义路径？创建本地配置文件（一次性操作）：
+    cd camera_addon
+    copy local_sdk_paths.cmake.example local_sdk_paths.cmake
+    （用文本编辑器打开 local_sdk_paths.cmake，取消注释并填入实际 SDK 根目录）
+
+    示例内容：
+      set(DAHENG_ROOT "C:/Program Files/micro-i/sc/camera")
+      set(HIK_ROOT    "D:/SDK/HIK/MVS/Development")
+
+    该文件已加入 .gitignore，不会提交到版本库。
+
+  成功后输出：camera_addon\build\Release\camera_addon.node
+
+--------------------------------------------------------
+4. 编译前端 + 打包 Electron
+--------------------------------------------------------
+  npm run build
+
+--------------------------------------------------------
+5. 开发模式（热更新）
+--------------------------------------------------------
+  npm run dev
+
+--------------------------------------------------------
+常见错误速查
+--------------------------------------------------------
+  LNK2019: napi_* 无法解析  → 确认已 npm install；若仍失败运行 npm run download:nodelib
+  C4819 / C2001             → 已通过 /utf-8 修复，无需处理
+  cmake 不是内部命令         → CMake 未加入 PATH
+  cl 不是内部命令            → 使用 x64 Native Tools 命令提示符
+
+  Cannot find module 'dist-electron/main.js'
+                            → dist-electron/ 目录尚未生成。
+                              请勿直接双击启动或运行 electron .
+                              正确做法：
+                                开发模式（热更新）: npm run dev
+                                生产包:            npm run build
+                              npm run dev 会自动编译 src/main/index.ts
+                              → dist-electron/main.js 再启动 Electron。
+

@@ -1,0 +1,47 @@
+{
+  "name": "robot-calibration-tool",
+  "version": "1.0.0",
+  "description": "Robot hand-eye calibration tool for industrial automation",
+  "author": "huiyingchenpompom",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "clean": "node -e \"const fs=require('fs');try{fs.rmSync('release',{recursive:true,force:true});console.log('cleaned release/')}catch(e){if(e.code!=='ENOENT')throw e}\"",
+    "build": "vite build && electron-builder",
+    "build:vite": "vite build",
+    "build:camera": "cd camera_addon && cmake -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release",
+    "download:nodelib": "node scripts/download-node-lib.mjs"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.14.3",
+    "@grpc/proto-loader": "^0.8.0",
+    "@vueuse/core": "^10.0.0",
+    "node-addon-api": "^8.6.0",
+    "node-api-headers": "^1.8.0",
+    "pinia": "^2.1.0",
+    "three": "^0.163.0",
+    "three-stdlib": "^2.29.0",
+    "vue": "^3.4.0"
+  },
+  "devDependencies": {
+    "@types/three": "^0.163.0",
+    "@vitejs/plugin-vue": "^5.0.0",
+    "autoprefixer": "^10.4.0",
+    "electron": "^30.0.0",
+    "electron-builder": "^24.0.0",
+    "postcss": "^8.4.0",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.0.0",
+    "vite": "^5.0.0",
+    "vite-plugin-electron": "^0.28.0"
+  },
+  "main": "dist-electron/main.js",
+  "build": {
+    "appId": "com.robot.calibration",
+    "productName": "Robot Calibration Tool",
+    "directories": { "output": "release" },
+    "win": { "target": "nsis" },
+    "files": ["dist/**/*", "dist-electron/**/*"]
+  }
+}

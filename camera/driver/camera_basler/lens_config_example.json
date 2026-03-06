@@ -1,0 +1,29 @@
+{
+    "camera": {
+        "id": 1,
+        "type": "basler",
+        "model": "acA1920-40gm"
+    },
+    "lens": {
+        "enabled": true,
+        "type": "computar_usb",
+        "config": {
+            "device_sn": "USB001",
+            "device_index": 0,
+            "focus_range": {
+                "min": 0,
+                "max": 100
+            },
+            "iris_range": {
+                "min": 0,
+                "max": 100
+            },
+            "init_focus": 50.0,
+            "init_iris": 30.0,
+            "focus_min": 0,
+            "focus_max": 65535,
+            "iris_min": 0,
+            "iris_max": 65535
+        }
+    }
+}

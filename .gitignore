@@ -1,0 +1,10 @@
+node_modules/
+release/
+dist/
+dist-electron/
+camera_addon/build/
+*.node
+.DS_Store
+*.log
+node.lib
+camera_addon/local_sdk_paths.cmake

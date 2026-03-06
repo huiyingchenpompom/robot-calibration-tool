@@ -1,0 +1,30 @@
+{
+    "lens_library_mapping": {
+        "computar": {
+            "usb": {
+                "library": "plugin/driver/lens_computar_usb.dll",
+                "description": "Computar USB变焦镜头驱动",
+                "supported_models": ["M0814-MP2", "M1214-MP2", "M1614-MP2"]
+            },
+            "ethernet": {
+                "library": "plugin/driver/lens_computar_ethernet.dll",
+                "description": "Computar以太网变焦镜头驱动",
+                "supported_models": ["E0814-MP2", "E1214-MP2"]
+            }
+        },
+        "canon": {
+            "usb": {
+                "library": "plugin/driver/lens_canon_usb.dll",
+                "description": "Canon USB镜头驱动",
+                "supported_models": ["EF-S18-55mm", "EF50mm"]
+            }
+        },
+        "tamron": {
+            "usb": {
+                "library": "plugin/driver/lens_tamron_usb.dll",
+                "description": "Tamron USB镜头驱动",
+                "supported_models": ["SP 90mm", "SP 150-600mm"]
+            }
+        }
+    }
+}
