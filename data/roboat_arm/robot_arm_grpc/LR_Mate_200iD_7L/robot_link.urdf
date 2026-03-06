@@ -1,0 +1,218 @@
+<?xml version="1.0"?>
+<robot name="Fanuc_LR_Mate_200iD_7L">
+  <material name="FanucGrey28">
+    <color rgba="0.278 0.278 0.278 1" />
+  </material>
+  <material name="FanucYellow">
+    <color rgba="1 1 0 1" />
+  </material>
+  <material name="FanucBlack">
+    <color rgba="0.15 0.15 0.15 1" />
+  </material>
+  
+
+	<link name="world">
+	</link>
+	<link name="BaseLink">
+		<visual>
+			<origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0" />
+			<geometry>
+				<mesh filename="meshes/BaseLink.stl" />
+			</geometry>
+			<material name="FanucGrey28">
+			</material>
+		</visual>
+		<collision>
+			<origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0" />
+			<geometry>
+				<mesh filename="meshes/BaseLink.stl" />
+			</geometry>
+			<material name="">
+				<color rgba="1.0 1.0 1.0 1.0" />
+			</material>
+		</collision>
+	</link>
+	<link name="Link1">
+		<visual>
+			<origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 -0.3300" />
+			<geometry>
+				<mesh filename="meshes/Link1.stl" />
+			</geometry>
+			<material name="FanucYellow">
+			</material>
+		</visual>
+		<collision>
+			<origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 -0.3300" />
+			<geometry>
+				<mesh filename="meshes/Link1.stl" />
+			</geometry>
+			<material name="">
+				<color rgba="1.0 1.0 1.0 1.0" />
+			</material>
+		</collision>
+	</link>
+	<link name="Link2">
+		<visual>
+			<origin rpy="0.0 0.0 0.0" xyz="-0.0500 0.0 -0.3300" />
+			<geometry>
+				<mesh filename="meshes/Link2.stl" />
+			</geometry>
+			<material name="FanucYellow">
+			</material>
+		</visual>
+		<collision>
+			<origin rpy="0.0 0.0 0.0" xyz="-0.0500 0.0 -0.3300" />
+			<geometry>
+				<mesh filename="meshes/Link2.stl" />
+			</geometry>
+			<material name="">
+				<color rgba="1.0 1.0 1.0 1.0" />
+			</material>
+		</collision>
+	</link>
+	<link name="Link3">
+		<visual>
+			<origin rpy="0.0 0.0 0.0" xyz="-0.0500 0.0 -0.7700" />
+			<geometry>
+				<mesh filename="meshes/Link3.stl" />
+			</geometry>
+			<material name="FanucYellow">
+			</material>
+		</visual>
+		<collision>
+			<origin rpy="0.0 0.0 0.0" xyz="-0.0500 0.0 -0.7700" />
+			<geometry>
+				<mesh filename="meshes/Link3.stl" />
+			</geometry>
+			<material name="">
+				<color rgba="1.0 1.0 1.0 1.0" />
+			</material>
+		</collision>
+	</link>
+	<link name="Link4">
+		<visual>
+			<origin rpy="0.0 -1.570796327 0.0" xyz="0.8050 0.0 -0.0500" />
+			<geometry>
+				<mesh filename="meshes/Link4.stl" />
+			</geometry>
+			<material name="FanucYellow">
+			</material>
+		</visual>
+		<collision>
+			<origin rpy="0.0 -1.570796327 0.0" xyz="0.8050 0.0 -0.0500" />
+			<geometry>
+				<mesh filename="meshes/Link4.stl" />
+			</geometry>
+			<material name="">
+				<color rgba="1.0 1.0 1.0 1.0" />
+			</material>
+		</collision>
+	</link>
+	<link name="Link5">
+		<visual>
+			<origin rpy="0.0 -1.570796327 0.0" xyz="0.8050 0.0 -0.4700" />
+			<geometry>
+				<mesh filename="meshes/Link5.stl" />
+			</geometry>
+			<material name="FanucYellow">
+			</material>
+		</visual>
+		<collision>
+			<origin rpy="0.0 -1.570796327 0.0" xyz="0.8050 0.0 -0.4700" />
+			<geometry>
+				<mesh filename="meshes/Link5.stl" />
+			</geometry>
+			<material name="">
+				<color rgba="1.0 1.0 1.0 1.0" />
+			</material>
+		</collision>
+	</link>
+	<link name="Link6">
+		<visual>
+			<origin rpy="0.0 -1.570796327 0.0" xyz="0.8050 0.0 -0.5500" />
+			<geometry>
+				<mesh filename="meshes/Link6.stl" />
+			</geometry>
+			<material name="FanucBlack">
+			</material>
+		</visual>
+		<collision>
+			<origin rpy="0.0 -1.570796327 0.0" xyz="0.8050 0.0 -0.5500" />
+			<geometry>
+				<mesh filename="meshes/Link6.stl" />
+			</geometry>
+			<material name="">
+				<color rgba="1.0 1.0 1.0 1.0" />
+			</material>
+		</collision>
+	</link>
+	<!-- <link name="EffectorLink">
+		<visual>
+			<origin rpy="0 -0.0 0" xyz="-0.005 -0.08 -0.02" />
+			<geometry>
+				<mesh filename="meshes/Camera.stl" />
+			</geometry>
+			<material name="FanucGrey28">
+			</material>
+		</visual>
+		<collision>
+			<origin rpy="0 -0 0" xyz="-0.005 -0.08 -0.02" />
+			<geometry>
+				<mesh filename="meshes/Camera.stl" />
+			</geometry>
+		</collision>
+	</link> -->
+	
+  	<joint name ="world1" type = "fixed">
+		<parent link = "world"/>
+		<child link = "BaseLink"/>
+	</joint>
+	<joint name="Joint1" type="revolute">
+		<axis xyz="0.0 0.0 1.0" />
+		<parent link="BaseLink" />
+		<child link="Link1" />
+		<origin xyz="0.0 0.0 0.3300" />
+		<limit effort="0" lower="-2.9" upper="2.9" velocity="6.3" acceleration="26" jerk="220"/>
+	</joint>
+	<joint name="Joint2" type="revolute">
+		<axis xyz="0.0 1.0 0.0" />
+		<parent link="Link1" />
+		<child link="Link2" />
+		<origin xyz="0.0500 0.0 0.0" />
+		<limit effort="0" lower="-1.7" upper="2.5" velocity="5.3" acceleration="22" jerk="185"/>
+	</joint>
+	<joint name="Joint3" type="revolute">
+		<axis xyz="0.0 -1.0 0.0" />
+		<parent link="Link2" />
+		<child link="Link3" />
+		<origin xyz="0.0 0.0 0.4400" rpy="0.0 0.0 0.0" />
+        <limit effort="0" lower="-2.4" upper="4.8" velocity="7.0" acceleration="29" jerk="245"/>
+	</joint>
+	<joint name="Joint4" type="revolute">
+		<axis xyz="0.0 0.0 -1.0" />
+		<parent link="Link3" />
+		<child link="Link4" />
+		<origin rpy="0.0 1.570796327 0.0" xyz="0.0 0.0 0.0350" />
+		<limit effort="0" lower="-3.3" upper="3.3" velocity="9.4" acceleration="39" jerk="328"/>
+	</joint>
+	<joint name="Joint5" type="revolute">
+		<axis xyz="0.0 -1.0 0.0" />
+		<parent link="Link4" />
+		<child link="Link5" />
+		<origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.4200" />
+		<limit effort="0" lower="-2.1" upper="2.1" velocity="9.3" acceleration="39" jerk ="325"/>
+	</joint>
+	<joint name="Joint6" type="revolute">
+		<axis xyz="0.0 0.0 -1.0" />
+		<parent link="Link5" />
+		<child link="Link6" />
+		<origin rpy="0.0 0.0 3.1415926" xyz="0.0 0.0 0.0800" />
+		<limit effort="0" lower="-6.2" upper="6.2" velocity="17.2" acceleration="71" jerk="590" />
+	</joint>
+	<!-- <joint name="JointEffector" type="fixed">
+		<parent link="Link6" />
+		<child link="EffectorLink" />
+		<origin rpy="0 0 0" xyz="0 0 0" />
+  	</joint> -->
+
+</robot>
