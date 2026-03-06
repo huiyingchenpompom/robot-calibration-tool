@@ -70,9 +70,13 @@ watch([robotUrdfContent, robotStlFiles], ([urdfContent, stlFiles]) => {
 
 // 轨迹文件导入后：将所有拍照点以矩形块可视化到 3D 场景
 watch([originalTrajectory, goldenImageIds], ([traj, gIds]) => {
-  const pictureIdList = traj?.view_point_CAD?.picture_id_list ?? []
-  const goldenSet = new Set(gIds as number[])
-  sceneManager?.setShotPoints(pictureIdList, goldenSet)
+  try {
+    const pictureIdList = traj?.view_point_CAD?.picture_id_list ?? []
+    const goldenSet = new Set(gIds as number[])
+    sceneManager?.setShotPoints(pictureIdList, goldenSet)
+  } catch (e) {
+    console.warn('[ThreeScene] setShotPoints 失败:', e)
+  }
 }, { deep: true })
 
 function resetCamera() {
