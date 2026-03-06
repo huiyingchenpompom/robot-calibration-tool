@@ -1,6 +1,6 @@
 <template>
   <div class="p-4 flex flex-col gap-6">
-    <h2 class="text-sm font-semibold text-slate-300 uppercase tracking-wide">步骤 2：场景模型</h2>
+    <h2 class="text-sm font-semibold text-slate-300 uppercase tracking-wide">场景模型</h2>
 
     <!-- 轨迹模型 -->
     <div class="flex flex-col gap-2">

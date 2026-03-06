@@ -1,15 +1,15 @@
 <template>
   <div class="p-4 flex flex-col gap-4">
-    <h2 class="text-sm font-semibold text-slate-300 uppercase tracking-wide">步骤 3：原机操作</h2>
+    <h2 class="text-sm font-semibold text-slate-300 uppercase tracking-wide">原机操作</h2>
 
     <!-- 导入轨迹 -->
     <div class="flex flex-col gap-2">
       <p class="text-xs text-slate-400">轨迹文件</p>
       <button
-        class="w-full py-2 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded text-sm text-slate-300 transition-colors"
+        class="w-full py-2 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded text-sm text-slate-300 transition-colors truncate"
         @click="importTrajectory"
       >
-        {{ originalTrajectoryPath || '📂 导入轨迹文件' }}
+        {{ trajectoryFileName || '📂 导入轨迹文件' }}
       </button>
     </div>
 
@@ -61,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useCalibrationStore } from '../../stores/calibrationStore'
 import { parseTrajectoryFile, extractShotPoints, getCADPointByPictureId, exportGoldenImages } from '../../services/trajectoryService'
@@ -93,6 +93,12 @@ type ElectronAPIBridge = {
 
 const errorMsg = ref<string>('')
 let stopRequested = false
+
+// Show only the filename portion to avoid overflowing the button
+const trajectoryFileName = computed(() => {
+  if (!originalTrajectoryPath.value) return ''
+  return originalTrajectoryPath.value.replace(/\\/g, '/').split('/').pop() || originalTrajectoryPath.value
+})
 
 async function importTrajectory() {
   try {
