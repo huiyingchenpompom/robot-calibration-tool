@@ -25,6 +25,7 @@ const { currentStep } = storeToRefs(store)
 
 const steps = [
   { id: 'connect', icon: '🔗', label: '连接' },
+  { id: 'scene', icon: '🗂', label: '场景' },
   { id: 'original', icon: '📸', label: '原机' },
   { id: 'new-machine', icon: '🔄', label: '新机' },
 ]

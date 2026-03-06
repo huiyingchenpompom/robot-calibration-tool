@@ -1,6 +1,6 @@
 <template>
   <div class="p-4 flex flex-col gap-4">
-    <h2 class="text-sm font-semibold text-slate-300 uppercase tracking-wide">步骤 2：原机操作</h2>
+    <h2 class="text-sm font-semibold text-slate-300 uppercase tracking-wide">步骤 3：原机操作</h2>
 
     <!-- 导入轨迹 -->
     <div class="flex flex-col gap-2">

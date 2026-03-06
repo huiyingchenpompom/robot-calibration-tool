@@ -19,7 +19,7 @@ let sceneManager: SceneManager | null = null
 
 const sceneStore = useSceneStore()
 const calibStore = useCalibrationStore()
-const { settings } = storeToRefs(sceneStore)
+const { settings, trajectoryModelData, platformModelData, robotUrdfContent, robotStlFiles } = storeToRefs(sceneStore)
 const { currentJointAngles } = storeToRefs(calibStore)
 
 onMounted(() => {
@@ -40,6 +40,18 @@ watch(settings, (newSettings) => {
 watch(currentJointAngles, () => {
   // 更新机器人姿态（需要正向运动学，这里为占位）
 })
+
+watch(trajectoryModelData, (data) => {
+  sceneManager?.setTrajectoryModel(data)
+})
+
+watch(platformModelData, (data) => {
+  sceneManager?.setPlatformModel(data)
+})
+
+watch([robotUrdfContent, robotStlFiles], ([urdfContent, stlFiles]) => {
+  sceneManager?.setRobotModels(urdfContent, stlFiles)
+}, { deep: true })
 
 function resetCamera() {
   sceneManager?.resetCamera()

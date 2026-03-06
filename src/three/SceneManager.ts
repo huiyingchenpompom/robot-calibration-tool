@@ -1,6 +1,7 @@
 // Three.js 场景管理器
 import * as THREE from 'three'
-import { OrbitControls } from 'three-stdlib'
+import { OrbitControls, STLLoader } from 'three-stdlib'
+import { parseURDF } from './URDFParser'
 import type { SceneSettings, JointAngles, Pose6D } from '../types'
 
 export class SceneManager {
@@ -15,6 +16,11 @@ export class SceneManager {
   private trajectoryPoints: THREE.Points | null = null
   private cadPointsGroup: THREE.Group = new THREE.Group()
   private trajectoryLinesGroup: THREE.Group = new THREE.Group()
+
+  // 导入的模型组
+  private trajectoryModelMesh: THREE.Mesh | null = null
+  private platformModelMesh: THREE.Mesh | null = null
+  private robotModelGroup: THREE.Group = new THREE.Group()
 
   constructor(container: HTMLElement) {
     // 场景
@@ -49,6 +55,7 @@ export class SceneManager {
     // 分组
     this.scene.add(this.cadPointsGroup)
     this.scene.add(this.trajectoryLinesGroup)
+    this.scene.add(this.robotModelGroup)
 
     // 默认辅助对象
     this.addGrid()
@@ -156,6 +163,132 @@ export class SceneManager {
     }
     this.cadPointsGroup.clear()
     this.trajectoryLinesGroup.clear()
+  }
+
+  /** 从 base64 字符串解析 STL 几何体 */
+  private loadSTLGeometry(base64Data: string): THREE.BufferGeometry {
+    const binaryStr = atob(base64Data)
+    const bytes = new Uint8Array(binaryStr.length)
+    for (let i = 0; i < binaryStr.length; i++) {
+      bytes[i] = binaryStr.charCodeAt(i)
+    }
+    const loader = new STLLoader()
+    return loader.parse(bytes.buffer)
+  }
+
+  /** 加载并显示轨迹模型 (STL) */
+  setTrajectoryModel(base64Data: string): void {
+    if (this.trajectoryModelMesh) {
+      this.scene.remove(this.trajectoryModelMesh)
+      this.trajectoryModelMesh.geometry.dispose()
+      ;(this.trajectoryModelMesh.material as THREE.Material).dispose()
+      this.trajectoryModelMesh = null
+    }
+    if (!base64Data) return
+    const geometry = this.loadSTLGeometry(base64Data)
+    geometry.computeVertexNormals()
+    const material = new THREE.MeshStandardMaterial({ color: 0x3b82f6, metalness: 0.2, roughness: 0.6, transparent: true, opacity: 0.85 })
+    this.trajectoryModelMesh = new THREE.Mesh(geometry, material)
+    this.trajectoryModelMesh.castShadow = true
+    this.trajectoryModelMesh.receiveShadow = true
+    this.scene.add(this.trajectoryModelMesh)
+  }
+
+  /** 加载并显示机台模型 (STL) */
+  setPlatformModel(base64Data: string): void {
+    if (this.platformModelMesh) {
+      this.scene.remove(this.platformModelMesh)
+      this.platformModelMesh.geometry.dispose()
+      ;(this.platformModelMesh.material as THREE.Material).dispose()
+      this.platformModelMesh = null
+    }
+    if (!base64Data) return
+    const geometry = this.loadSTLGeometry(base64Data)
+    geometry.computeVertexNormals()
+    const material = new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.4, roughness: 0.5, transparent: true, opacity: 0.9 })
+    this.platformModelMesh = new THREE.Mesh(geometry, material)
+    this.platformModelMesh.castShadow = true
+    this.platformModelMesh.receiveShadow = true
+    this.scene.add(this.platformModelMesh)
+  }
+
+  /** 加载并显示机械臂模型 (URDF + STL 文件集合，以零位姿显示) */
+  setRobotModels(urdfContent: string, stlFiles: Map<string, string>): void {
+    // 释放旧资源
+    this.robotModelGroup.traverse(obj => {
+      if (obj instanceof THREE.Mesh) {
+        obj.geometry.dispose()
+        ;(obj.material as THREE.Material).dispose()
+      }
+    })
+    this.robotModelGroup.clear()
+    if (!urdfContent || stlFiles.size === 0) return
+
+    const robot = parseURDF(urdfContent)
+
+    // 构建 parent link → joints 的映射
+    const linkJoints = new Map<string, Array<{ child: string; originMatrix: THREE.Matrix4 }>>()
+    robot.joints.forEach(joint => {
+      const m = new THREE.Matrix4()
+      m.makeRotationFromEuler(joint.origin.rpy)
+      m.setPosition(joint.origin.xyz)
+      const arr = linkJoints.get(joint.parent) ?? []
+      arr.push({ child: joint.child, originMatrix: m })
+      linkJoints.set(joint.parent, arr)
+    })
+
+    // 找根节点（不是任何 joint 的 child）
+    const childLinkNames = new Set<string>()
+    robot.joints.forEach(j => childLinkNames.add(j.child))
+    let rootLinkName = ''
+    robot.links.forEach((_, name) => {
+      if (!childLinkNames.has(name)) rootLinkName = name
+    })
+    if (!rootLinkName) return
+
+    // 深度优先遍历，累积变换矩阵后生成各 link 的 Mesh
+    const traverse = (linkName: string, parentMatrix: THREE.Matrix4) => {
+      const link = robot.links.get(linkName)
+      if (!link) return
+
+      if (link.visual?.geometry.type === 'mesh' && link.visual.geometry.filename) {
+        const meshFileName = link.visual.geometry.filename.split('/').pop()?.toLowerCase() ?? ''
+        for (const [stlName, stlData] of stlFiles) {
+          if (stlName.toLowerCase() === meshFileName) {
+            const geometry = this.loadSTLGeometry(stlData)
+            geometry.computeVertexNormals()
+            const color = link.visual.material?.color ?? new THREE.Color(0.75, 0.75, 0.8)
+            const material = new THREE.MeshStandardMaterial({ color, metalness: 0.35, roughness: 0.55 })
+            const mesh = new THREE.Mesh(geometry, material)
+
+            // 视觉原点相对 link 坐标系的变换（与父变换合并后分解到 position/quaternion/scale）
+            const visualMatrix = new THREE.Matrix4()
+            visualMatrix.makeRotationFromEuler(link.visual.origin.rpy)
+            visualMatrix.setPosition(link.visual.origin.xyz)
+
+            const worldMatrix = parentMatrix.clone().multiply(visualMatrix)
+            const pos = new THREE.Vector3()
+            const quat = new THREE.Quaternion()
+            const scale = new THREE.Vector3()
+            worldMatrix.decompose(pos, quat, scale)
+            mesh.position.copy(pos)
+            mesh.quaternion.copy(quat)
+            mesh.scale.copy(scale)
+            mesh.castShadow = true
+            this.robotModelGroup.add(mesh)
+            break
+          }
+        }
+      }
+
+      // 递归子节点
+      const children = linkJoints.get(linkName) ?? []
+      for (const { child, originMatrix } of children) {
+        traverse(child, parentMatrix.clone().multiply(originMatrix))
+      }
+    }
+
+    traverse(rootLinkName, new THREE.Matrix4())
   }
 
   /** 销毁场景管理器 */

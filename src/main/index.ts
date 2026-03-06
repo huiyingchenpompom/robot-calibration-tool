@@ -268,3 +268,43 @@ ipcMain.handle('file:save', async (_event, { content, filters }: { content: stri
   fs.writeFileSync(result.filePath, content, 'utf-8')
   return result.filePath
 })
+
+// 打开二进制文件（如 STL），以 base64 返回
+ipcMain.handle('file:open-binary', async (_event, filters?: Electron.FileFilter[]) => {
+  const result = await dialog.showOpenDialog({
+    properties: ['openFile'],
+    filters: filters ?? [{ name: 'STL Files', extensions: ['stl'] }],
+  })
+  if (result.canceled || !result.filePaths[0]) return null
+  const filePath = result.filePaths[0]
+  const data = fs.readFileSync(filePath).toString('base64')
+  const name = path.basename(filePath)
+  return { filePath, name, data }
+})
+
+// 打开机械臂模型目录：读取目录下所有 URDF 和 STL 文件
+ipcMain.handle('file:open-robot-folder', async () => {
+  const result = await dialog.showOpenDialog({
+    properties: ['openDirectory'],
+    title: '选择机械臂模型目录（包含 URDF 和 STL 文件）',
+  })
+  if (result.canceled || !result.filePaths[0]) return null
+  const dirPath = result.filePaths[0]
+
+  const allFiles = fs.readdirSync(dirPath)
+
+  // 找第一个 URDF 文件
+  const urdfFileName = allFiles.find(f => f.toLowerCase().endsWith('.urdf'))
+  if (!urdfFileName) return { error: '目录中未找到 .urdf 文件', dirPath }
+  const urdfContent = fs.readFileSync(path.join(dirPath, urdfFileName), 'utf-8')
+
+  // 读取所有 STL 文件
+  const stlFiles: Array<{ name: string; data: string }> = allFiles
+    .filter(f => f.toLowerCase().endsWith('.stl'))
+    .map(f => ({
+      name: f,
+      data: fs.readFileSync(path.join(dirPath, f)).toString('base64'),
+    }))
+
+  return { dirPath, urdfName: urdfFileName, urdfContent, stlFiles }
+})

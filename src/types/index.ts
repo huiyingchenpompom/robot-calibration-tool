@@ -74,7 +74,7 @@ export type CameraConnectionState = 'disconnected' | 'connecting' | 'connected' 
 export type CameraBrand = 'basler' | 'hik' | 'daheng'
 
 /** 工作流步骤 */
-export type WorkflowStep = 'connect' | 'original' | 'new-machine'
+export type WorkflowStep = 'connect' | 'scene' | 'original' | 'new-machine'
 
 /** 机器人连接配置 */
 export interface RobotConfig {

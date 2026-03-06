@@ -12,7 +12,20 @@ export const useSceneStore = defineStore('scene', () => {
     lineWidth: 1,
   })
 
-  // 机器人模型状态
+  // 轨迹模型 (STL)
+  const trajectoryModelData = ref<string>('')
+  const trajectoryModelName = ref<string>('')
+
+  // 机台模型 (STL)
+  const platformModelData = ref<string>('')
+  const platformModelName = ref<string>('')
+
+  // 机械臂模型 (URDF + 多个 STL)
+  const robotUrdfContent = ref<string>('')
+  const robotUrdfName = ref<string>('')
+  const robotStlFiles = ref<Map<string, string>>(new Map())
+
+  // 机器人模型状态（保留原有字段兼容其他逻辑）
   const urdfModelPath = ref<string>('')
   const robotLinkFiles = ref<Record<string, string>>({})
   const currentPose = ref<JointAngles>([0, 0, 0, 0, 0, 0])
@@ -45,11 +58,34 @@ export const useSceneStore = defineStore('scene', () => {
     settings.value.showAxes = !settings.value.showAxes
   }
 
+  function setTrajectoryModel(data: string, name: string) {
+    trajectoryModelData.value = data
+    trajectoryModelName.value = name
+  }
+
+  function setPlatformModel(data: string, name: string) {
+    platformModelData.value = data
+    platformModelName.value = name
+  }
+
+  function setRobotModels(urdfContent: string, urdfName: string, stlFiles: Map<string, string>) {
+    robotUrdfContent.value = urdfContent
+    robotUrdfName.value = urdfName
+    robotStlFiles.value = stlFiles
+  }
+
   return {
     settings,
     urdfModelPath,
     robotLinkFiles,
     currentPose,
+    trajectoryModelData,
+    trajectoryModelName,
+    platformModelData,
+    platformModelName,
+    robotUrdfContent,
+    robotUrdfName,
+    robotStlFiles,
     showTrajectoryPoints,
     showCADPoints,
     showActualTrajectory,
@@ -60,5 +96,8 @@ export const useSceneStore = defineStore('scene', () => {
     setCurrentPose,
     toggleGrid,
     toggleAxes,
+    setTrajectoryModel,
+    setPlatformModel,
+    setRobotModels,
   }
 })

@@ -8,6 +8,7 @@
     <!-- 右侧上下文面板 -->
     <div class="w-80 flex flex-col border-l border-slate-700 bg-slate-800 overflow-y-auto">
       <ConnectionPanel v-if="currentStep === 'connect'" />
+      <SceneSetupPanel v-else-if="currentStep === 'scene'" />
       <OriginalPanel v-else-if="currentStep === 'original'" />
       <NewMachinePanel v-else-if="currentStep === 'new-machine'" />
     </div>
@@ -20,6 +21,7 @@ import { useCalibrationStore } from '../stores/calibrationStore'
 import ThreeScene from '../components/three/ThreeScene.vue'
 import SceneControlPanel from '../components/panels/SceneControlPanel.vue'
 import ConnectionPanel from '../components/panels/ConnectionPanel.vue'
+import SceneSetupPanel from '../components/panels/SceneSetupPanel.vue'
 import OriginalPanel from '../components/panels/OriginalPanel.vue'
 import NewMachinePanel from '../components/panels/NewMachinePanel.vue'
 
