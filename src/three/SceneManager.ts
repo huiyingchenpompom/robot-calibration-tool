@@ -4,6 +4,14 @@ import { OrbitControls, STLLoader } from 'three-stdlib'
 import { parseURDF } from './URDFParser'
 import type { SceneSettings, JointAngles, Pose6D } from '../types'
 
+// Multiplier applied to the minimum bounding-sphere-based camera distance when auto-fitting
+const CAMERA_DISTANCE_MULTIPLIER = 1.8
+// Default isometric-ish viewing direction (normalized inside fitCameraToObject)
+const DEFAULT_CAMERA_DIRECTION = new THREE.Vector3(1, 0.7, 1)
+// near/far plane scale relative to the computed camera distance
+const NEAR_PLANE_FACTOR = 0.001
+const FAR_PLANE_FACTOR = 100
+
 export class SceneManager {
   private scene: THREE.Scene
   private camera: THREE.PerspectiveCamera
@@ -192,6 +200,7 @@ export class SceneManager {
     this.trajectoryModelMesh.castShadow = true
     this.trajectoryModelMesh.receiveShadow = true
     this.scene.add(this.trajectoryModelMesh)
+    this.fitCameraToObject(this.trajectoryModelMesh)
   }
 
   /** 加载并显示机台模型 (STL) */
@@ -210,6 +219,7 @@ export class SceneManager {
     this.platformModelMesh.castShadow = true
     this.platformModelMesh.receiveShadow = true
     this.scene.add(this.platformModelMesh)
+    this.fitCameraToObject(this.platformModelMesh)
   }
 
   /** 加载并显示机械臂模型 (URDF + STL 文件集合，以零位姿显示) */
@@ -289,6 +299,35 @@ export class SceneManager {
     }
 
     traverse(rootLinkName, new THREE.Matrix4())
+    if (this.robotModelGroup.children.length > 0) {
+      this.fitCameraToObject(this.robotModelGroup)
+    }
+  }
+
+  /** 调整相机以完整显示指定物体 */
+  fitCameraToObject(object: THREE.Object3D): void {
+    const box = new THREE.Box3().setFromObject(object)
+    if (box.isEmpty()) return
+
+    const center = new THREE.Vector3()
+    const size = new THREE.Vector3()
+    box.getCenter(center)
+    box.getSize(size)
+
+    const maxDim = Math.max(size.x, size.y, size.z)
+    if (maxDim === 0) return
+
+    const fov = this.camera.fov * (Math.PI / 180)
+    const distance = Math.abs(maxDim / (2 * Math.tan(fov / 2))) * CAMERA_DISTANCE_MULTIPLIER
+
+    const dir = DEFAULT_CAMERA_DIRECTION.clone().normalize()
+    this.camera.position.copy(center).addScaledVector(dir, distance)
+    this.camera.near = distance * NEAR_PLANE_FACTOR
+    this.camera.far = distance * FAR_PLANE_FACTOR
+    this.camera.updateProjectionMatrix()
+    this.camera.lookAt(center)
+    this.controls.target.copy(center)
+    this.controls.update()
   }
 
   /** 销毁场景管理器 */

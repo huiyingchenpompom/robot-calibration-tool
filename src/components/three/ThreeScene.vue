@@ -42,15 +42,30 @@ watch(currentJointAngles, () => {
 })
 
 watch(trajectoryModelData, (data) => {
-  sceneManager?.setTrajectoryModel(data)
+  try {
+    sceneManager?.setTrajectoryModel(data)
+    if (data) sceneStore.clearModelLoadError()
+  } catch (e) {
+    sceneStore.setModelLoadError(`加载轨迹模型失败: ${e instanceof Error ? e.message : String(e)}`)
+  }
 })
 
 watch(platformModelData, (data) => {
-  sceneManager?.setPlatformModel(data)
+  try {
+    sceneManager?.setPlatformModel(data)
+    if (data) sceneStore.clearModelLoadError()
+  } catch (e) {
+    sceneStore.setModelLoadError(`加载机台模型失败: ${e instanceof Error ? e.message : String(e)}`)
+  }
 })
 
 watch([robotUrdfContent, robotStlFiles], ([urdfContent, stlFiles]) => {
-  sceneManager?.setRobotModels(urdfContent, stlFiles)
+  try {
+    sceneManager?.setRobotModels(urdfContent, stlFiles)
+    if (urdfContent) sceneStore.clearModelLoadError()
+  } catch (e) {
+    sceneStore.setModelLoadError(`加载机械臂模型失败: ${e instanceof Error ? e.message : String(e)}`)
+  }
 }, { deep: true })
 
 function resetCamera() {

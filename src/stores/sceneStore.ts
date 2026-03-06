@@ -74,6 +74,17 @@ export const useSceneStore = defineStore('scene', () => {
     robotStlFiles.value = stlFiles
   }
 
+  // 模型加载错误（由 ThreeScene 写入，由 SceneSetupPanel 读取）
+  const modelLoadError = ref<string>('')
+
+  function setModelLoadError(msg: string) {
+    modelLoadError.value = msg
+  }
+
+  function clearModelLoadError() {
+    modelLoadError.value = ''
+  }
+
   return {
     settings,
     urdfModelPath,
@@ -99,5 +110,8 @@ export const useSceneStore = defineStore('scene', () => {
     setTrajectoryModel,
     setPlatformModel,
     setRobotModels,
+    modelLoadError,
+    setModelLoadError,
+    clearModelLoadError,
   }
 })

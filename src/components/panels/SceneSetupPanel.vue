@@ -49,8 +49,8 @@
       </div>
     </div>
 
-    <div v-if="errorMsg" class="p-2 bg-red-900/50 border border-red-700 rounded text-xs text-red-300">
-      {{ errorMsg }}
+    <div v-if="errorMsg || modelLoadError" class="p-2 bg-red-900/50 border border-red-700 rounded text-xs text-red-300">
+      {{ errorMsg || modelLoadError }}
     </div>
   </div>
 </template>
@@ -67,7 +67,7 @@ type ElectronAPIBridge = {
 }
 
 const sceneStore = useSceneStore()
-const { trajectoryModelName, platformModelName, robotUrdfName, robotStlFiles } = storeToRefs(sceneStore)
+const { trajectoryModelName, platformModelName, robotUrdfName, robotStlFiles, modelLoadError } = storeToRefs(sceneStore)
 
 const isLoadingRobot = ref(false)
 const errorMsg = ref('')
@@ -76,6 +76,7 @@ const robotStlCount = computed(() => robotStlFiles.value.size)
 
 async function importTrajectoryModel() {
   errorMsg.value = ''
+  sceneStore.clearModelLoadError()
   try {
     const result = await (window as typeof window & ElectronAPIBridge).electronAPI?.invoke(
       'file:open-binary',
@@ -90,6 +91,7 @@ async function importTrajectoryModel() {
 
 async function importPlatformModel() {
   errorMsg.value = ''
+  sceneStore.clearModelLoadError()
   try {
     const result = await (window as typeof window & ElectronAPIBridge).electronAPI?.invoke(
       'file:open-binary',
@@ -104,6 +106,7 @@ async function importPlatformModel() {
 
 async function importRobotFolder() {
   errorMsg.value = ''
+  sceneStore.clearModelLoadError()
   isLoadingRobot.value = true
   try {
     type RobotFolderResult = {
