@@ -190,6 +190,7 @@ npm run dev
 
 | 错误信息 | 原因 | 解决方法 |
 |----------|------|----------|
+| `-- Basler/Daheng/HIK SDK 未找到 → 以 stub 模式编译` | **这不是错误**，是 CMake 的 STATUS 提示（`--` 开头表示普通信息）。SDK 未安装时自动进入 stub 模式，`camera_addon.node` 仍会正常生成，连接对应品牌相机时才会在运行时报错。 | 无需处理；如需连接实际相机，安装对应 SDK 并配置 `local_sdk_paths.cmake`（见上方说明） |
 | `LNK2019: 无法解析的外部符号 napi_*` | `node.lib` 缺失或生成失败 | 确认已运行 `npm install`；若自动生成失败，运行 `npm run download:nodelib` |
 | `C4819` / `C2001 常量中有换行符` | MSVC 以 GBK 解析 UTF-8 源文件 | 已通过 `/utf-8` 编译选项修复，无需手动处理 |
 | `protocol '.https' is not supported` | `git clone` URL 前多了一个点 | 使用 `https://` 而非 `.https://` |

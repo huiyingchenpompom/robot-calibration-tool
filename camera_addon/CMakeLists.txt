@@ -100,7 +100,8 @@ if(PYLON_INCLUDE_DIR)
         target_link_libraries(camera_addon PRIVATE ${PYLON_LIB})
     endif()
 else()
-    message(STATUS "Basler Pylon SDK 未找到，Basler 相机功能不可用")
+    message(STATUS "Basler Pylon SDK 未找到 → 以 stub 模式编译（构建成功；运行时调用 connect('basler',...) 会抛出 'Basler Pylon SDK 未编译，无法连接'）")
+    message(STATUS "  如需启用 Basler 支持，请安装 Pylon SDK 并在 local_sdk_paths.cmake 中设置 PYLON_ROOT")
 endif()
 
 # 大恒相机 Galaxy SDK
@@ -168,7 +169,8 @@ if(DAHENG_INCLUDE_DIR)
         endif()
     endif()
 else()
-    message(STATUS "Daheng Galaxy SDK 未找到，大恒相机功能不可用")
+    message(STATUS "Daheng Galaxy SDK 未找到 → 以 stub 模式编译（构建成功；运行时调用 connect('daheng',...) 会抛出 '大恒相机 Galaxy SDK 未编译，无法连接'）")
+    message(STATUS "  如需启用大恒相机支持，请安装 Galaxy SDK 并在 local_sdk_paths.cmake 中设置 DAHENG_ROOT")
 endif()
 
 # 海康威视 MVS SDK
@@ -209,7 +211,8 @@ if(HIK_INCLUDE_DIR)
         target_link_libraries(camera_addon PRIVATE ${HIK_LIB})
     endif()
 else()
-    message(STATUS "HIK MVS SDK 未找到，海康相机功能不可用")
+    message(STATUS "HIK MVS SDK 未找到 → 以 stub 模式编译（构建成功；运行时调用 connect('hik',...) 会抛出 'HIK MVS SDK 未编译，无法连接'）")
+    message(STATUS "  如需启用海康相机支持，请安装 MVS SDK 并在 local_sdk_paths.cmake 中设置 HIK_ROOT")
 endif()
 
 # Windows 特定设置
