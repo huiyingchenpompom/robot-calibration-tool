@@ -89,3 +89,12 @@
   cmake 不是内部命令         → CMake 未加入 PATH
   cl 不是内部命令            → 使用 x64 Native Tools 命令提示符
 
+  Cannot find module 'dist-electron/main.js'
+                            → dist-electron/ 目录尚未生成。
+                              请勿直接双击启动或运行 electron .
+                              正确做法：
+                                开发模式（热更新）: npm run dev
+                                生产包:            npm run build
+                              npm run dev 会自动编译 src/main/index.ts
+                              → dist-electron/main.js 再启动 Electron。
+

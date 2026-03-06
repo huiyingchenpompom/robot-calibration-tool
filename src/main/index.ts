@@ -1,11 +1,13 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron'
 import { fileURLToPath } from 'node:url'
+import { createRequire } from 'node:module'
 import path from 'node:path'
 import fs from 'node:fs'
 import * as grpc from '@grpc/grpc-js'
 import * as protoLoader from '@grpc/proto-loader'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const _require = createRequire(import.meta.url)
 const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 
 let win: BrowserWindow | null = null
@@ -179,7 +181,7 @@ function loadCameraAddon() {
   if (cameraAddon) return cameraAddon
   try {
     const addonPath = path.join(__dirname, '../../camera_addon/build/Release/camera_addon.node')
-    cameraAddon = require(addonPath) as Record<string, (...args: unknown[]) => unknown>
+    cameraAddon = _require(addonPath) as Record<string, (...args: unknown[]) => unknown>
     return cameraAddon
   } catch {
     console.warn('相机 addon 未找到，使用模拟模式')
