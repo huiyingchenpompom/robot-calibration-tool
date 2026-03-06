@@ -1,6 +1,6 @@
 <template>
   <div class="p-4 flex flex-col gap-6">
-    <h2 class="text-sm font-semibold text-slate-300 uppercase tracking-wide">步骤 1：连接</h2>
+    <h2 class="text-sm font-semibold text-slate-300 uppercase tracking-wide">连接</h2>
 
     <!-- 机器人臂 -->
     <div class="flex flex-col gap-3">

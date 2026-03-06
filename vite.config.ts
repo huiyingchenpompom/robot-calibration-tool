@@ -34,6 +34,12 @@ export default defineConfig({
         vite: withExternalBuiltins({
           build: {
             outDir: 'dist-electron',
+            // Electron sandbox requires preload to be CommonJS (cannot use ESM import).
+            // Override vite-plugin-electron's default "es" format (set when package.json type=module).
+            lib: {
+              formats: ['cjs'],
+              fileName: () => 'preload.js',
+            },
             rollupOptions: {
               external: electronExternals,
             },
