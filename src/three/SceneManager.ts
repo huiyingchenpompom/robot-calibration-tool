@@ -166,6 +166,8 @@ export class SceneManager {
     if (pictureIdList.length === 0) return
 
     pictureIdList.forEach(vp => {
+      if (!vp.cad_point) return
+
       const isGolden = goldenIds.has(vp.picture_id)
       const color = isGolden ? 0xfbbf24 : 0x22d3ee  // 金黄 : 青色
 
