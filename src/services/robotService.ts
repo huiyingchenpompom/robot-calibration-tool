@@ -9,13 +9,17 @@ const IPC = {
   PTP: 'robot:ptp',
   GET_JOINTS: 'robot:getJoints',
   EMERGENCY_STOP: 'robot:emergencyStop',
+  GET_STATUS: 'robot:getStatus',
 }
 
 /**
- * 连接机器人臂
+ * 连接机器人臂（调用协议层 Connect RPC 握手）
  */
 export async function connectRobot(ip: string, port: number): Promise<void> {
-  await getElectronAPI().invoke(IPC.CONNECT, { ip, port })
+  const result = await getElectronAPI().invoke(IPC.CONNECT, { ip, port }) as { success: boolean; error?: string }
+  if (!result.success) {
+    throw new Error(result.error ?? '机器人连接失败')
+  }
 }
 
 /**
@@ -48,4 +52,19 @@ export async function getCurrentJoints(): Promise<JointAngles> {
  */
 export async function emergencyStop(): Promise<void> {
   await getElectronAPI().invoke(IPC.EMERGENCY_STOP)
+}
+
+/**
+ * 获取机器人完整状态（state / joints / is_powered）
+ */
+export interface RobotStatus {
+  state: string
+  joints: JointAngles
+  is_powered: boolean
+  error_message: string
+}
+
+export async function getRobotStatus(): Promise<RobotStatus> {
+  const result = await getElectronAPI().invoke(IPC.GET_STATUS)
+  return result as RobotStatus
 }

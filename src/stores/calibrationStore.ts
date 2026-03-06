@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import type {
   TrajectoryFile,
   CapturedImage,
@@ -12,6 +12,7 @@ import type {
   TransformMatrix,
   JointAngles,
 } from '../types'
+import { getRobotStatus } from '../services/robotService'
 
 export const useCalibrationStore = defineStore('calibration', () => {
   // 工作流状态
@@ -137,6 +138,45 @@ export const useCalibrationStore = defineStore('calibration', () => {
     currentGoldenIndex.value = 0
   }
 
+  // 机器人状态轮询：连接时每 500 ms 更新关节角度
+  let _pollTimer: ReturnType<typeof setInterval> | null = null
+
+  function _startJointPolling() {
+    if (_pollTimer) return
+    _pollTimer = setInterval(async () => {
+      try {
+        const status = await getRobotStatus()
+        currentJointAngles.value = status.joints
+      } catch (e) {
+        // 开发模式下输出警告，方便排查连接问题
+        if (import.meta.env.DEV) {
+          console.warn('[robot poll] GetRobotStatus 失败:', e)
+        }
+      }
+    }, 500)
+  }
+
+  function _stopJointPolling() {
+    if (_pollTimer) {
+      clearInterval(_pollTimer)
+      _pollTimer = null
+    }
+  }
+
+  const _unwatch = watch(robotConnectionState, (state) => {
+    if (state === 'connected') {
+      _startJointPolling()
+    } else {
+      _stopJointPolling()
+    }
+  })
+
+  /** 销毁 store 时调用（清理轮询定时器和 watcher） */
+  function $cleanup() {
+    _stopJointPolling()
+    _unwatch()
+  }
+
   return {
     currentStep,
     robotConnectionState,
@@ -178,5 +218,6 @@ export const useCalibrationStore = defineStore('calibration', () => {
     updateCurrentJointAngles,
     advanceGoldenIndex,
     resetGoldenIndex,
+    $cleanup,
   }
 })
