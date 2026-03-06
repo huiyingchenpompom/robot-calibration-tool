@@ -163,11 +163,30 @@ export class SceneManager {
   setShotPoints(pictureIdList: ViewPointCAD[], goldenIds: Set<number> = new Set()): void {
     this.clearShotPoints()
 
-    if (pictureIdList.length === 0) return
+    // 过滤掉 cad_point 为 null/undefined 的无效条目
+    const validPoints = pictureIdList.filter(vp => vp.cad_point)
+    if (validPoints.length === 0) return
 
-    pictureIdList.forEach(vp => {
-      if (!vp.cad_point) return
+    // 计算所有拍照点的包围盒范围，用于按比例确定标记尺寸
+    // cad_point 坐标可能为毫米（mm）或米（m）单位，动态缩放确保标记始终可见
+    let minX = Infinity, maxX = -Infinity
+    let minY = Infinity, maxY = -Infinity
+    let minZ = Infinity, maxZ = -Infinity
+    for (const vp of validPoints) {
+      const [x, y, z] = vp.cad_point
+      if (x < minX) minX = x
+      if (x > maxX) maxX = x
+      if (y < minY) minY = y
+      if (y > maxY) maxY = y
+      if (z < minZ) minZ = z
+      if (z > maxZ) maxZ = z
+    }
+    const extent = Math.max(maxX - minX, maxY - minY, maxZ - minZ, 1)
+    // 标记尺寸为包围盒范围的 1.5%，球半径为平面边长的 25%
+    const markerSize = extent * 0.015
+    const sphereRadius = markerSize * 0.25
 
+    validPoints.forEach(vp => {
       const isGolden = goldenIds.has(vp.picture_id)
       const color = isGolden ? 0xfbbf24 : 0x22d3ee  // 金黄 : 青色
 
@@ -177,7 +196,7 @@ export class SceneManager {
       markerGroup.rotation.set(rx, ry, rz)
 
       // 矩形块（代表相机视野在工件上的投影区域）
-      const planeGeo = new THREE.PlaneGeometry(0.04, 0.04)
+      const planeGeo = new THREE.PlaneGeometry(markerSize, markerSize)
       const planeMat = new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide, transparent: true, opacity: 0.75 })
       markerGroup.add(new THREE.Mesh(planeGeo, planeMat))
 
@@ -187,7 +206,7 @@ export class SceneManager {
       markerGroup.add(new THREE.LineSegments(edgesGeo, edgesMat))
 
       // 中心球标记
-      const sphereGeo = new THREE.SphereGeometry(0.008, 6, 6)
+      const sphereGeo = new THREE.SphereGeometry(sphereRadius, 6, 6)
       const sphereMat = new THREE.MeshBasicMaterial({ color })
       markerGroup.add(new THREE.Mesh(sphereGeo, sphereMat))
 
